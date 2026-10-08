@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Switch, Route, Router as WouterRouter, Link, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Home as HomeIcon, Upload, Star, Settings as SettingsIcon, Search, Loader2 } from "lucide-react";
@@ -18,7 +18,7 @@ const queryClient = new QueryClient();
 function AppHeader() {
   const [, setLocation] = useLocation();
   return (
-    <div className="app-header-glass h-12 border-b border-card-border flex items-center justify-between px-4 sticky top-0 z-10 shrink-0">
+    <div className="app-header-glass h-12 border-b border-card-border flex items-center justify-between px-4 z-10 shrink-0">
       <h1 className="font-bold text-lg tracking-tight text-[var(--text-primary)]">
         UID <span className="text-[var(--primary)]">Operator</span>
       </h1>
@@ -40,7 +40,7 @@ function BottomNav() {
   ];
 
   return (
-    <div className="bottom-nav-premium fixed bottom-0 left-0 right-0 h-16 border-t border-card-border flex items-center justify-around px-2 z-50">
+    <div className="bottom-nav-premium h-16 shrink-0 border-t border-card-border flex items-center justify-around px-2 z-50">
       {tabs.map((tab) => {
         const isActive = location === tab.href;
         const Icon = tab.icon;
@@ -56,10 +56,17 @@ function BottomNav() {
 }
 
 function Router() {
+  const [location] = useLocation();
+  const scrollRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0, behavior: "auto" });
+  }, [location]);
+
   return (
-    <div className="app-shell flex flex-col w-full min-h-[100dvh] max-w-md mx-auto shadow-2xl relative">
+    <div className="app-shell flex flex-col w-full h-[100dvh] max-w-md mx-auto shadow-2xl relative overflow-hidden">
       <AppHeader />
-      <main className="flex-1 overflow-y-auto pb-4 overscroll-contain">
+      <main ref={scrollRef} className="app-scroll flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
         <Switch>
           <Route path="/" component={Home} />
           <Route path="/import" component={Import} />
@@ -100,7 +107,7 @@ function AuthenticatedApp() {
   if (!session) return <AuthPage />;
 
   return (
-    <div className="min-h-[100dvh]">
+    <div className="h-[100dvh] overflow-hidden">
       <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
         <Router />
       </WouterRouter>
