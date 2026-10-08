@@ -3,7 +3,6 @@ import cors from "cors";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import fbRouter from "./routes/fb";
-import adminRouter from "./routes/admin";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
@@ -32,7 +31,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/fb", fbRouter);
-app.use("/api/admin", adminRouter);
 app.use("/api", router);
 
 export default app;

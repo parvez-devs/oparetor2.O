@@ -1,14 +1,11 @@
-import { getFBCookie } from "./storage";
-
 export async function fetchFBProfiles(uids: { uid: string; password?: string }[]) {
   if (uids.length === 0) return { results: [] };
 
-  const cookie = getFBCookie();
-
+  // Passwords are intentionally never sent to the server. They remain local-only.
   const res = await fetch("/api/fb/uid/fetch", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ uids, ...(cookie ? { cookie } : {}) }),
+    body: JSON.stringify({ uids: uids.map(({ uid }) => ({ uid })) }),
   });
 
   if (!res.ok) throw new Error(`API returned ${res.status}`);
@@ -26,30 +23,4 @@ export async function fetchFBProfiles(uids: { uid: string; password?: string }[]
       };
     }[];
   }>;
-}
-
-function getSessionId(): string {
-  const key = "uid-session-id";
-  let id = sessionStorage.getItem(key);
-  if (!id) {
-    id = crypto.randomUUID();
-    sessionStorage.setItem(key, id);
-  }
-  return id;
-}
-
-export async function trackEvent(
-  action: "import" | "fetch",
-  entries: string[]
-): Promise<void> {
-  if (entries.length === 0) return;
-  try {
-    fetch("/api/admin/track", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action, entries, sessionId: getSessionId() }),
-    }).catch(() => {});
-  } catch {
-    // silent — tracking never blocks main flow
-  }
 }

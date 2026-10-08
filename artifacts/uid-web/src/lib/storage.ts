@@ -1,3 +1,15 @@
+import {
+  clearCloudUIDs,
+  deleteCloudUID,
+  getSession,
+  pullCloudPreferences,
+  pullCloudUIDs,
+  readStoredSession,
+  upsertCloudPreferences,
+  upsertCloudUIDs,
+  type CloudUIDRow,
+} from "./supabase";
+
 export interface UIDEntry {
   id: string;
   uid: string;
@@ -51,10 +63,26 @@ export function getPreferences(): AppPreferences {
   }
 }
 
-export function savePreferences(prefs: Partial<AppPreferences>): void {
-  const current = getPreferences();
-  localStorage.setItem(PREFS_KEY, JSON.stringify({ ...current, ...prefs }));
+function savePreferencesLocal(prefs: AppPreferences): void {
+  localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
   window.dispatchEvent(new Event("prefs-updated"));
+}
+
+export function savePreferences(prefs: Partial<AppPreferences>): void {
+  const next = { ...getPreferences(), ...prefs };
+  savePreferencesLocal(next);
+
+  const session = readStoredSession();
+  if (session) {
+    void upsertCloudPreferences({
+      user_id: session.user.id,
+      theme: next.theme,
+      font_size: next.fontSize,
+      view_mode: next.viewMode,
+      swipe_to_delete: next.swipeToDelete,
+      auto_retry: next.autoRetry,
+    }).catch((err) => console.warn("Preference cloud sync failed", err));
+  }
 }
 
 export function getUIDs(): UIDEntry[] {
@@ -67,7 +95,7 @@ export function getUIDs(): UIDEntry[] {
   }
 }
 
-export function saveUIDs(uids: UIDEntry[]): boolean {
+function saveUIDsLocal(uids: UIDEntry[]): boolean {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(uids));
     window.dispatchEvent(new Event("uids-updated"));
@@ -78,12 +106,41 @@ export function saveUIDs(uids: UIDEntry[]): boolean {
   }
 }
 
+export function saveUIDs(uids: UIDEntry[]): boolean {
+  return saveUIDsLocal(uids);
+}
+
+function toCloudRow(entry: UIDEntry, userId: string): Omit<CloudUIDRow, "created_at" | "updated_at"> {
+  return {
+    id: entry.id,
+    user_id: userId,
+    uid: entry.uid,
+    name: entry.name ?? null,
+    username: entry.username ?? null,
+    profile_pic: entry.profilePic ?? null,
+    follower_count: entry.followerCount ?? null,
+    has_instagram: Boolean(entry.hasInstagram),
+    status: entry.status,
+    fetched_at: entry.fetchedAt ?? null,
+    saved: Boolean(entry.saved),
+    re_input: Boolean(entry.reInput),
+  };
+}
+
+function syncRows(entries: UIDEntry[]) {
+  const session = readStoredSession();
+  if (!session || entries.length === 0) return;
+  void upsertCloudUIDs(entries.map((entry) => toCloudRow(entry, session.user.id)))
+    .catch((err) => console.warn("UID cloud sync failed", err));
+}
+
 // Append every entry as-is (no dedup/merge) — keep all pasted lines.
-// Returns how many were added and whether the save succeeded (false = storage full).
+// Passwords remain local-only and are never sent to Supabase or the profile API.
 export function appendUIDs(newUIDs: UIDEntry[]): { added: number; saved: boolean } {
   if (newUIDs.length === 0) return { added: 0, saved: true };
   const existing = getUIDs();
-  const saved = saveUIDs([...newUIDs, ...existing]);
+  const saved = saveUIDsLocal([...newUIDs, ...existing]);
+  if (saved) syncRows(newUIDs);
   return { added: saved ? newUIDs.length : 0, saved };
 }
 
@@ -93,19 +150,92 @@ export function updateUIDs(updates: (Partial<UIDEntry> & { id: string })[]): voi
   const next = existing.map((e) =>
     updateMap.has(e.id) ? { ...e, ...updateMap.get(e.id) } : e
   );
-  saveUIDs(next);
+  saveUIDsLocal(next);
+  const changed = next.filter((e) => updateMap.has(e.id));
+  syncRows(changed);
 }
 
 export function deleteUID(id: string): void {
-  saveUIDs(getUIDs().filter((e) => e.id !== id));
+  saveUIDsLocal(getUIDs().filter((e) => e.id !== id));
+  void deleteCloudUID(id).catch((err) => console.warn("Cloud delete failed", err));
 }
 
 export function toggleSaved(id: string): void {
   const existing = getUIDs();
-  saveUIDs(existing.map((e) => (e.id === id ? { ...e, saved: !e.saved } : e)));
+  const next = existing.map((e) => (e.id === id ? { ...e, saved: !e.saved } : e));
+  saveUIDsLocal(next);
+  const changed = next.find((e) => e.id === id);
+  if (changed) syncRows([changed]);
 }
 
 export function clearAllUIDs(): void {
   localStorage.removeItem(STORAGE_KEY);
   window.dispatchEvent(new Event("uids-updated"));
+  void clearCloudUIDs().catch((err) => console.warn("Cloud clear failed", err));
+}
+
+export async function hydrateFromCloud(): Promise<void> {
+  const session = await getSession();
+  if (!session) return;
+
+  const localUIDs = getUIDs();
+  if (localUIDs.length > 0) {
+    await upsertCloudUIDs(localUIDs.map((entry) => toCloudRow(entry, session.user.id)));
+  }
+
+  const remoteUIDs = await pullCloudUIDs();
+  const localById = new Map(localUIDs.map((entry) => [entry.id, entry]));
+  const remoteIds = new Set(remoteUIDs.map((row) => row.id));
+  const mergedRemote: UIDEntry[] = remoteUIDs.map((row) => {
+    const local = localById.get(row.id);
+    return {
+      id: row.id,
+      uid: row.uid,
+      password: local?.password,
+      name: row.name ?? undefined,
+      username: row.username ?? undefined,
+      profilePic: row.profile_pic ?? undefined,
+      followerCount: row.follower_count ?? undefined,
+      hasInstagram: row.has_instagram,
+      status: row.status,
+      fetchedAt: row.fetched_at ?? undefined,
+      saved: row.saved,
+      reInput: row.re_input,
+    };
+  });
+  const localOnly = localUIDs.filter((entry) => !remoteIds.has(entry.id));
+  saveUIDsLocal([...mergedRemote, ...localOnly]);
+
+  const hadLocalPreferences = localStorage.getItem(PREFS_KEY) !== null;
+  const localPrefs = getPreferences();
+  if (hadLocalPreferences) {
+    await upsertCloudPreferences({
+      user_id: session.user.id,
+      theme: localPrefs.theme,
+      font_size: localPrefs.fontSize,
+      view_mode: localPrefs.viewMode,
+      swipe_to_delete: localPrefs.swipeToDelete,
+      auto_retry: localPrefs.autoRetry,
+    });
+  }
+
+  const remotePrefs = await pullCloudPreferences();
+  if (remotePrefs) {
+    savePreferencesLocal({
+      theme: remotePrefs.theme,
+      fontSize: remotePrefs.font_size,
+      viewMode: remotePrefs.view_mode,
+      swipeToDelete: remotePrefs.swipe_to_delete,
+      autoRetry: remotePrefs.auto_retry,
+    });
+  } else if (!hadLocalPreferences) {
+    await upsertCloudPreferences({
+      user_id: session.user.id,
+      theme: localPrefs.theme,
+      font_size: localPrefs.fontSize,
+      view_mode: localPrefs.viewMode,
+      swipe_to_delete: localPrefs.swipeToDelete,
+      auto_retry: localPrefs.autoRetry,
+    });
+  }
 }

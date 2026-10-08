@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { getUIDs, updateUIDs, deleteUID, appendUIDs, toggleSaved, clearAllUIDs, type UIDEntry } from "@/lib/storage";
-import { fetchFBProfiles, trackEvent } from "@/lib/api";
+import { fetchFBProfiles } from "@/lib/api";
 
 const CHUNK_SIZE = 30;
 
@@ -25,7 +25,6 @@ export function useUIDs() {
       const chunk = toFetch.slice(i, i + CHUNK_SIZE);
       try {
         const res = await fetchFBProfiles(chunk.map(u => ({ uid: u.uid, password: u.password })));
-        void trackEvent("fetch", chunk.map(u => u.password ? `${u.uid}|${u.password}` : u.uid));
         const resultsMap = new Map(res.results.map(r => [r.uid, r.result]));
         const updates = chunk.map(entry => {
           const fbResult = resultsMap.get(entry.uid);
