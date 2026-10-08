@@ -37,7 +37,7 @@ export default function Saved() {
   }, [batchFetch]);
 
   return (
-    <div className="flex flex-col p-3 space-y-3">
+    <div className="page-enter flex flex-col p-3 space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -63,7 +63,7 @@ export default function Saved() {
       </div>
 
       {savedUIDs.length > 0 && (
-        <div className="relative">
+        <div className="focus-glow relative rounded-lg">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
           <Input
             placeholder="Search saved UIDs..."

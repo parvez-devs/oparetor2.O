@@ -21,13 +21,13 @@ export default function Settings() {
   };
 
   return (
-    <div className="flex flex-col p-4 space-y-5 pb-24">
+    <div className="page-enter flex flex-col p-4 space-y-5 pb-24">
       <h2 className="text-xl font-bold">Settings</h2>
 
       {/* ── THEME ── */}
       <div className="space-y-2">
         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider pl-1">Theme</h3>
-        <Card className="bg-card">
+        <Card className="premium-surface bg-card">
           <CardContent className="p-3">
             <div className="flex bg-muted rounded-md p-1">
               <Button
@@ -54,7 +54,7 @@ export default function Settings() {
       {/* ── FONT SIZE ── */}
       <div className="space-y-2">
         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider pl-1">Font Size</h3>
-        <Card className="bg-card">
+        <Card className="premium-surface bg-card">
           <CardContent className="p-3">
             <div className="flex bg-muted rounded-md p-1">
               {(["sm", "md", "lg"] as const).map(size => (
@@ -76,7 +76,7 @@ export default function Settings() {
       {/* ── VIEW MODE ── */}
       <div className="space-y-2">
         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider pl-1">View Mode</h3>
-        <Card className="bg-card">
+        <Card className="premium-surface bg-card">
           <CardContent className="p-3">
             <div className="flex bg-muted rounded-md p-1">
               <Button
@@ -103,7 +103,7 @@ export default function Settings() {
       {/* ── PREFERENCES ── */}
       <div className="space-y-2">
         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider pl-1">Preferences</h3>
-        <Card className="bg-card">
+        <Card className="premium-surface bg-card">
           <CardContent className="p-4 space-y-6">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
@@ -134,7 +134,7 @@ export default function Settings() {
       {/* ── STORAGE ── */}
       <div className="space-y-2">
         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider pl-1">Storage</h3>
-        <Card className="bg-card">
+        <Card className="premium-surface bg-card">
           <CardContent className="p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-muted rounded-full">

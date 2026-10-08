@@ -106,7 +106,7 @@ function UIDCardImpl({
 
   return (
     <div
-      className="bg-card border border-card-border rounded-xl shadow-sm overflow-hidden relative"
+      className="uid-card-premium bg-card border border-card-border rounded-xl overflow-hidden relative"
       data-testid={`card-uid-${entry.uid}`}
       style={{ transform: `translateX(${swipeX}px)`, transition: swipeX === 0 ? "transform 0.2s ease" : "none" }}
       onTouchStart={onTouchStart}
@@ -184,7 +184,7 @@ function UIDCardImpl({
             <div className="flex items-center gap-1 shrink-0">
               <button
                 onClick={() => onToggleSaved(entry.id)}
-                className="text-[var(--text-muted)] hover:text-[var(--warning)] transition-colors p-0.5"
+                className="pressable text-[var(--text-muted)] hover:text-[var(--warning)] transition-colors p-0.5"
                 title={entry.saved ? "Unsave" : "Save"}
                 data-testid={`btn-star-${entry.id}`}
                 style={{ touchAction: "manipulation" }}
@@ -212,7 +212,7 @@ function UIDCardImpl({
               <div className="relative" ref={menuRef}>
                 <button
                   onClick={() => setMenuOpen(v => !v)}
-                  className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors p-0.5 rounded"
+                  className="pressable text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors p-0.5 rounded"
                   title="More options"
                   style={{ touchAction: "manipulation" }}
                 >

@@ -97,13 +97,13 @@ export default function Import() {
   const progressPercent = progress ? Math.min(100, Math.round((progress.current / progress.total) * 100)) : 0;
 
   return (
-    <div className="flex flex-col p-4 space-y-4 h-full">
+    <div className="page-enter flex flex-col p-4 space-y-4 h-full">
       <div className="flex items-center gap-2">
         <Upload className="w-5 h-5 text-[var(--primary)]" />
         <h2 className="text-xl font-bold text-[var(--text-primary)]">Import UIDs</h2>
       </div>
 
-      <div className="bg-[var(--card)] p-3 rounded-lg text-xs font-mono text-[var(--text-secondary)] border border-[var(--card-border)] flex items-start gap-3">
+      <div className="premium-surface bg-[var(--card)] p-3 rounded-lg text-xs font-mono text-[var(--text-secondary)] border border-[var(--card-border)] flex items-start gap-3">
         <Info className="w-4 h-4 text-[var(--primary)] shrink-0 mt-0.5" />
         <div>
           <p className="font-semibold text-[var(--text-primary)] mb-1">Format Examples:</p>
@@ -116,14 +116,14 @@ export default function Import() {
         value={input}
         onChange={e => setInput(e.target.value)}
         placeholder="Paste UIDs here..."
-        className="flex-1 min-h-[300px] font-mono text-sm bg-card border-[var(--card-border)] text-[var(--text-primary)] focus-visible:ring-[var(--primary)] resize-none"
+        className="premium-surface flex-1 min-h-[300px] font-mono text-sm bg-card border-[var(--card-border)] text-[var(--text-primary)] focus-visible:ring-[var(--primary)] resize-none"
         disabled={isProcessing}
         data-testid="textarea-import"
       />
 
       <div className="flex flex-col gap-3 pt-2">
         {isProcessing && progress && (
-          <div className="w-full bg-[var(--card-border)] rounded-full h-1.5 overflow-hidden">
+          <div className="progress-shine w-full bg-[var(--card-border)] rounded-full h-1.5 overflow-hidden">
             <div 
               className="bg-[var(--primary)] h-1.5 transition-all duration-300 ease-out" 
               style={{ width: `${progressPercent}%` }}
@@ -146,7 +146,7 @@ export default function Import() {
           <Button 
             onClick={handleImport} 
             disabled={!input.trim() || isProcessing}
-            className="min-w-[120px] bg-[var(--primary)] text-white hover:bg-[var(--primary-dim)] border-0"
+            className="pressable min-w-[120px] bg-[var(--primary)] text-white hover:bg-[var(--primary-dim)] border-0"
             data-testid="button-import-submit"
           >
             {isProcessing ? "Processing..." : "Import"}

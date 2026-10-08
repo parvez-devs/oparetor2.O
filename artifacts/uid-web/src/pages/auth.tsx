@@ -37,10 +37,10 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-[#0a0e1a] text-white flex items-center justify-center px-5">
+    <div className="page-enter min-h-[100dvh] bg-[#0a0e1a] text-white flex items-center justify-center px-5">
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 rounded-xl bg-[#1677ff] flex items-center justify-center shadow-lg shadow-blue-500/20 mb-4">
+          <div className="premium-surface w-14 h-14 rounded-xl bg-[#1677ff] flex items-center justify-center shadow-lg shadow-blue-500/20 mb-4">
             <UserRound className="w-7 h-7" />
           </div>
           <h1 className="text-xl font-bold tracking-tight">{mode === "login" ? "UID Operator" : "Create account"}</h1>
@@ -55,7 +55,7 @@ export default function AuthPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
-              className="mt-1.5 w-full h-11 rounded-md border border-[#202a3a] bg-[#171c27] px-3 text-sm outline-none focus:border-[#1677ff]"
+              className="premium-surface mt-1.5 w-full h-11 rounded-md border border-[#202a3a] bg-[#171c27] px-3 text-sm outline-none focus:border-[#1677ff]"
               placeholder="name@example.com"
             />
           </div>
@@ -66,7 +66,7 @@ export default function AuthPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete={mode === "login" ? "current-password" : "new-password"}
-              className="mt-1.5 w-full h-11 rounded-md border border-[#202a3a] bg-[#171c27] px-3 text-sm outline-none focus:border-[#1677ff]"
+              className="premium-surface mt-1.5 w-full h-11 rounded-md border border-[#202a3a] bg-[#171c27] px-3 text-sm outline-none focus:border-[#1677ff]"
               placeholder="••••••••"
             />
           </div>
@@ -77,7 +77,7 @@ export default function AuthPage() {
           <button
             type="submit"
             disabled={busy}
-            className="w-full h-11 rounded-md bg-[#1677ff] hover:bg-[#126be6] disabled:opacity-60 text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+            className="pressable w-full h-11 rounded-md bg-[#1677ff] hover:bg-[#126be6] disabled:opacity-60 text-sm font-semibold transition-colors flex items-center justify-center gap-2"
           >
             {busy && <Loader2 className="w-4 h-4 animate-spin" />}
             {mode === "login" ? "Login" : "Register"}

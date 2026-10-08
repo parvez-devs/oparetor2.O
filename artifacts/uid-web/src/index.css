@@ -103,3 +103,183 @@
 .ig-gradient-bg {
   background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
 }
+
+
+/* ---- UIDZone premium motion polish ---- */
+:root {
+  --surface-glow: rgba(59, 157, 255, 0.14);
+  --surface-glow-strong: rgba(0, 212, 255, 0.16);
+  --card-shadow: 0 10px 30px rgba(22, 58, 110, 0.08);
+}
+
+.dark {
+  --surface-glow: rgba(59, 157, 255, 0.13);
+  --surface-glow-strong: rgba(0, 212, 255, 0.1);
+  --card-shadow: 0 14px 34px rgba(0, 0, 0, 0.24);
+}
+
+html {
+  background: var(--background);
+}
+
+body {
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at 12% -10%, var(--surface-glow), transparent 34rem),
+    radial-gradient(circle at 92% 15%, var(--surface-glow-strong), transparent 28rem),
+    var(--background);
+}
+
+.app-shell {
+  isolation: isolate;
+  position: relative;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--background) 94%, var(--primary) 6%), var(--background) 22%);
+}
+
+.app-shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% -8rem, var(--surface-glow), transparent 26rem);
+}
+
+.app-header-glass {
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+  backdrop-filter: blur(18px) saturate(130%);
+  -webkit-backdrop-filter: blur(18px) saturate(130%);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--primary) 8%, transparent);
+}
+
+.bottom-nav-premium {
+  background: color-mix(in srgb, var(--card) 91%, transparent);
+  backdrop-filter: blur(20px) saturate(135%);
+  -webkit-backdrop-filter: blur(20px) saturate(135%);
+  box-shadow: 0 -10px 28px color-mix(in srgb, var(--background) 78%, transparent);
+}
+
+.page-enter {
+  animation: page-enter 320ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.premium-surface {
+  box-shadow: var(--card-shadow);
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+
+.premium-surface:hover {
+  border-color: color-mix(in srgb, var(--primary) 30%, var(--card-border));
+}
+
+.uid-card-premium {
+  box-shadow: var(--card-shadow);
+  animation: card-enter 280ms cubic-bezier(.22, 1, .36, 1) both;
+  will-change: transform;
+}
+
+@media (hover: hover) {
+  .uid-card-premium:hover {
+    transform: translateY(-1px);
+    border-color: color-mix(in srgb, var(--primary) 34%, var(--card-border));
+    box-shadow: 0 16px 36px color-mix(in srgb, var(--primary) 10%, transparent);
+  }
+}
+
+.pressable {
+  transition: transform 120ms ease, opacity 120ms ease, background-color 160ms ease, color 160ms ease;
+}
+
+.pressable:active {
+  transform: scale(0.96);
+}
+
+.nav-item {
+  position: relative;
+  transition: transform 160ms ease, color 160ms ease;
+}
+
+.nav-item:active {
+  transform: scale(0.94);
+}
+
+.nav-item-active::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  width: 28px;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary-accent));
+  box-shadow: 0 0 14px var(--surface-glow-strong);
+  animation: nav-pop 220ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.focus-glow:focus-within {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 14%, transparent);
+}
+
+.soft-pulse {
+  animation: soft-pulse 1.8s ease-in-out infinite;
+}
+
+.progress-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-110%);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent);
+  animation: progress-shine 1.4s linear infinite;
+}
+
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(7px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes card-enter {
+  from { opacity: 0; transform: translateY(8px) scale(.992); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes nav-pop {
+  from { opacity: 0; transform: scaleX(.55); }
+  to { opacity: 1; transform: scaleX(1); }
+}
+
+@keyframes soft-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .62; }
+}
+
+@keyframes progress-shine {
+  to { transform: translateX(110%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter,
+  .uid-card-premium,
+  .nav-item-active::before,
+  .soft-pulse,
+  .progress-shine::after {
+    animation: none !important;
+  }
+
+  .pressable,
+  .nav-item,
+  .premium-surface,
+  .uid-card-premium {
+    transition: none !important;
+  }
+}
