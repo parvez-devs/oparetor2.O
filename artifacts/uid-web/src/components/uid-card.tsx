@@ -108,7 +108,7 @@ function UIDCardImpl({
     <div
       className="uid-card-premium bg-card border border-card-border rounded-xl overflow-hidden relative"
       data-testid={`card-uid-${entry.uid}`}
-      style={{ transform: `translateX(${swipeX}px)`, transition: swipeX === 0 ? "transform 0.2s ease" : "none" }}
+      style={{ transform: swipeX !== 0 ? `translateX(${swipeX}px)` : undefined, transition: swipeX !== 0 ? "none" : undefined, touchAction: "pan-y" }}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}

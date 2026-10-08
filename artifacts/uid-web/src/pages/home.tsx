@@ -31,8 +31,11 @@ export default function Home() {
     if (toFetch.length === 0) return;
     const ids = toFetch.map(e => e.id);
     markFetching(ids, true);
-    await batchFetch(toFetch);
-    markFetching(ids, false);
+    try {
+      await batchFetch(toFetch);
+    } finally {
+      markFetching(ids, false);
+    }
   }, [batchFetch]);
 
   const handleFetchOne = useCallback((entry: UIDEntry) => {

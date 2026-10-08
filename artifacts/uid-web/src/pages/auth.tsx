@@ -37,7 +37,7 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="page-enter min-h-[100dvh] bg-[#0a0e1a] text-white flex items-center justify-center px-5">
+    <div className="page-enter h-[100dvh] overflow-y-auto bg-[#0a0e1a] text-white flex items-center justify-center px-5 py-8 overscroll-contain">
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-8">
           <div className="premium-surface w-14 h-14 rounded-xl bg-[#1677ff] flex items-center justify-center shadow-lg shadow-blue-500/20 mb-4">

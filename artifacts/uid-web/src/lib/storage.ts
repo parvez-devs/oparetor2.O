@@ -37,6 +37,36 @@ const STORAGE_KEY = "uid-operator-uids";
 const COOKIE_KEY = "uid-operator-fb-cookie";
 const PREFS_KEY = "uid-operator-prefs";
 
+function scopedKey(baseKey: string): string {
+  const userId = readStoredSession()?.user.id;
+  return userId ? `${baseKey}:${userId}` : baseKey;
+}
+
+function migrateLegacyValue(baseKey: string, targetKey: string): void {
+  if (baseKey === targetKey || localStorage.getItem(targetKey) !== null) return;
+  const legacy = localStorage.getItem(baseKey);
+  if (legacy === null) return;
+  localStorage.setItem(targetKey, legacy);
+  localStorage.removeItem(baseKey);
+}
+
+function readScoped(baseKey: string): string | null {
+  const key = scopedKey(baseKey);
+  migrateLegacyValue(baseKey, key);
+  return localStorage.getItem(key);
+}
+
+function writeScoped(baseKey: string, value: string): void {
+  const key = scopedKey(baseKey);
+  migrateLegacyValue(baseKey, key);
+  localStorage.setItem(key, value);
+}
+
+function removeScoped(baseKey: string): void {
+  const key = scopedKey(baseKey);
+  localStorage.removeItem(key);
+}
+
 const DEFAULT_PREFS: AppPreferences = {
   theme: "dark",
   fontSize: "md",
@@ -46,16 +76,16 @@ const DEFAULT_PREFS: AppPreferences = {
 };
 
 export function getFBCookie(): string {
-  return localStorage.getItem(COOKIE_KEY) || "";
+  return readScoped(COOKIE_KEY) || "";
 }
 
 export function saveFBCookie(cookie: string): void {
-  localStorage.setItem(COOKIE_KEY, cookie);
+  writeScoped(COOKIE_KEY, cookie);
 }
 
 export function getPreferences(): AppPreferences {
   try {
-    const raw = localStorage.getItem(PREFS_KEY);
+    const raw = readScoped(PREFS_KEY);
     if (!raw) return { ...DEFAULT_PREFS };
     return { ...DEFAULT_PREFS, ...JSON.parse(raw) };
   } catch {
@@ -64,7 +94,7 @@ export function getPreferences(): AppPreferences {
 }
 
 function savePreferencesLocal(prefs: AppPreferences): void {
-  localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+  writeScoped(PREFS_KEY, JSON.stringify(prefs));
   window.dispatchEvent(new Event("prefs-updated"));
 }
 
@@ -87,7 +117,7 @@ export function savePreferences(prefs: Partial<AppPreferences>): void {
 
 export function getUIDs(): UIDEntry[] {
   try {
-    const data = localStorage.getItem(STORAGE_KEY);
+    const data = readScoped(STORAGE_KEY);
     if (!data) return [];
     return JSON.parse(data);
   } catch {
@@ -97,7 +127,7 @@ export function getUIDs(): UIDEntry[] {
 
 function saveUIDsLocal(uids: UIDEntry[]): boolean {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(uids));
+    writeScoped(STORAGE_KEY, JSON.stringify(uids));
     window.dispatchEvent(new Event("uids-updated"));
     return true;
   } catch (err) {
@@ -169,7 +199,7 @@ export function toggleSaved(id: string): void {
 }
 
 export function clearAllUIDs(): void {
-  localStorage.removeItem(STORAGE_KEY);
+  removeScoped(STORAGE_KEY);
   window.dispatchEvent(new Event("uids-updated"));
   void clearCloudUIDs().catch((err) => console.warn("Cloud clear failed", err));
 }
@@ -206,7 +236,7 @@ export async function hydrateFromCloud(): Promise<void> {
   const localOnly = localUIDs.filter((entry) => !remoteIds.has(entry.id));
   saveUIDsLocal([...mergedRemote, ...localOnly]);
 
-  const hadLocalPreferences = localStorage.getItem(PREFS_KEY) !== null;
+  const hadLocalPreferences = readScoped(PREFS_KEY) !== null;
   const localPrefs = getPreferences();
   if (hadLocalPreferences) {
     await upsertCloudPreferences({
