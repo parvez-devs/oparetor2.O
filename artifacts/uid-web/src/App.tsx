@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Switch, Route, Router as WouterRouter, Link, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Home as HomeIcon, Upload, Star, Settings as SettingsIcon, Search } from "lucide-react";
+import { Home as HomeIcon, Upload, Star, Settings as SettingsIcon, Search, Loader2 } from "lucide-react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
@@ -9,8 +9,9 @@ import Home from "@/pages/home";
 import Import from "@/pages/import";
 import Saved from "@/pages/saved";
 import Settings from "@/pages/settings";
-import AdminPage from "@/pages/admin";
+import AuthPage from "@/pages/auth";
 import { usePreferences } from "@/hooks/use-preferences";
+import { AuthProvider, useAuth } from "@/contexts/auth-context";
 
 const queryClient = new QueryClient();
 
@@ -55,12 +56,6 @@ function BottomNav() {
 }
 
 function Router() {
-  const [location] = useLocation();
-
-  if (location === "/admin") {
-    return <AdminPage />;
-  }
-
   return (
     <div className="flex flex-col w-full min-h-[100dvh] max-w-md mx-auto bg-background shadow-2xl relative">
       <AppHeader />
@@ -78,15 +73,13 @@ function Router() {
   );
 }
 
-function App() {
+function AuthenticatedApp() {
+  const { session, loading } = useAuth();
   const { prefs } = usePreferences();
 
   useEffect(() => {
-    if (prefs.theme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    if (prefs.theme === "dark") document.documentElement.classList.add("dark");
+    else document.documentElement.classList.remove("dark");
   }, [prefs.theme]);
 
   useEffect(() => {
@@ -96,14 +89,32 @@ function App() {
     if (prefs.fontSize === "lg") document.documentElement.classList.add("text-lg");
   }, [prefs.fontSize]);
 
+  if (loading) {
+    return (
+      <div className="min-h-[100dvh] bg-[#0a0e1a] text-white flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-[#1677ff]" />
+      </div>
+    );
+  }
+
+  if (!session) return <AuthPage />;
+
+  return (
+    <div className="bg-background min-h-[100dvh]">
+      <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+        <Router />
+      </WouterRouter>
+    </div>
+  );
+}
+
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <div className="bg-background min-h-[100dvh]">
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <Router />
-          </WouterRouter>
-        </div>
+        <AuthProvider>
+          <AuthenticatedApp />
+        </AuthProvider>
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>

@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useUIDs } from "@/hooks/use-uids";
 import { useToast } from "@/hooks/use-toast";
-import { trackEvent } from "@/lib/api";
 import { type UIDEntry } from "@/lib/storage";
 
 export default function Import() {
@@ -39,7 +38,6 @@ export default function Import() {
     const lines = input.split('\n').map(l => l.trim()).filter(l => l);
 
     const newEntries: UIDEntry[] = [];
-    const trackedEntries: string[] = [];
 
     // Keep every pasted line — no dedup/merge, even if the same UID repeats.
     for (const line of lines) {
@@ -48,7 +46,6 @@ export default function Import() {
       const password = parts[1]?.trim() || undefined;
 
       if (!uid) continue;
-      trackedEntries.push(password ? `${uid}|${password}` : uid);
       newEntries.push({
         id: crypto.randomUUID(),
         uid,
@@ -74,7 +71,6 @@ export default function Import() {
       return;
     }
 
-    void trackEvent("import", trackedEntries);
     toast({
       title: "Imported",
       description: `Added ${added} UID${added === 1 ? "" : "s"}. Fetching profiles...`,
