@@ -32,8 +32,15 @@ export default function Saved() {
 
   const handleFetch = useCallback(async (entry: UIDEntry) => {
     setFetchingIds(prev => new Set(prev).add(entry.id));
-    await batchFetch([entry]);
-    setFetchingIds(prev => { const n = new Set(prev); n.delete(entry.id); return n; });
+    try {
+      await batchFetch([entry]);
+    } finally {
+      setFetchingIds(prev => {
+        const next = new Set(prev);
+        next.delete(entry.id);
+        return next;
+      });
+    }
   }, [batchFetch]);
 
   return (
