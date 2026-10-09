@@ -78,7 +78,7 @@ export function ImportScreen({
         <View style={styles.footerArea}>
           {busy ? (
             <View style={[styles.progressTrack, { backgroundColor: theme.border }]}>
-              <View style={[styles.progressFill, { backgroundColor: theme.primary, width: progress + "%" }]} />
+              <View style={[styles.progressFill, { backgroundColor: theme.primary, width: (progress + "%") as `${number}%` }]} />
             </View>
           ) : null}
 
