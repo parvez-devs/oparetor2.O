@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   StatusBar,
   Platform,
@@ -15,7 +14,7 @@ import { HomeScreen } from "./src/screens/HomeScreen";
 import { ImportScreen } from "./src/screens/ImportScreen";
 import { SavedScreen } from "./src/screens/SavedScreen";
 import { SettingsScreen } from "./src/screens/SettingsScreen";
-import { restoreSession, signOut as authSignOut } from "./src/auth";
+import { restoreSession } from "./src/auth";
 import {
   clearCloudUIDs,
   deleteCloudUID,
@@ -255,8 +254,8 @@ export default function App() {
     );
     const next = [...created, ...uidsRef.current];
     await commit(next, created);
+    await batchFetch(created);
     setTab("home");
-    batchFetch(created);
     Vibration.vibrate(12);
     return created.length;
   };
@@ -296,15 +295,6 @@ export default function App() {
     if (current) await hydrate(current, true);
   };
 
-  const logout = async () => {
-    await authSignOut(sessionRef.current);
-    setSessionBoth(null);
-    uidsRef.current = [];
-    setUids([]);
-    setPrefs(DEFAULT_PREFS);
-    setTab("home");
-  };
-
   if (booting) {
     return (
       <View style={[styles.loader, { backgroundColor: "#080d14" }]}>
@@ -318,8 +308,8 @@ export default function App() {
 
   const tabs: Array<{ id: Tab; label: string; icon: string }> = [
     { id: "home", label: "HOME", icon: "⌂" },
-    { id: "import", label: "IMPORT", icon: "＋" },
-    { id: "saved", label: "SAVED", icon: "★" },
+    { id: "import", label: "IMPORT", icon: "⇧" },
+    { id: "saved", label: "SAVED", icon: "☆" },
     { id: "settings", label: "SETTINGS", icon: "⚙" }
   ];
 
@@ -347,6 +337,7 @@ export default function App() {
             onFetch={batchFetch}
             onDelete={deleteOne}
             onSaved={toggleSaved}
+            onClear={clearAll}
             onGoImport={() => setTab("import")}
           />
         ) : null}
@@ -361,22 +352,16 @@ export default function App() {
             onFetch={batchFetch}
             onDelete={deleteOne}
             onSaved={toggleSaved}
+            onGoHome={() => setTab("home")}
           />
         ) : null}
         {tab === "settings" ? (
           <SettingsScreen
             theme={theme}
             prefs={prefs}
-            email={session.user.email}
             total={uids.length}
             onPrefs={updatePrefs}
             onClear={clearAll}
-            onSignOut={() =>
-              Alert.alert("Sign out?", undefined, [
-                { text: "Cancel", style: "cancel" },
-                { text: "Sign out", onPress: logout }
-              ])
-            }
           />
         ) : null}
       </View>
@@ -395,7 +380,7 @@ export default function App() {
             >
               {active ? <View style={[styles.activeLine, { backgroundColor: theme.primary }]} /> : null}
               <Text style={{ color: active ? theme.primary : theme.muted, fontSize: 20 }}>{item.icon}</Text>
-              <Text style={{ color: active ? theme.primary : theme.muted, fontSize: 9, fontWeight: "800", marginTop: 2 }}>
+              <Text style={{ color: active ? theme.primary : theme.muted, fontSize: 10, fontWeight: "600", marginTop: 3, letterSpacing: 0.3 }}>
                 {item.label}
               </Text>
             </Pressable>
@@ -410,20 +395,20 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   loader: { flex: 1, alignItems: "center", justifyContent: "center" },
   header: {
-    height: 52,
+    height: 48,
     borderBottomWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center"
   },
-  brand: { fontSize: 18, fontWeight: "900", flex: 1 },
+  brand: { fontSize: 18, fontWeight: "800", flex: 1, letterSpacing: -0.2 },
   headerButton: { width: 42, height: 42, alignItems: "center", justifyContent: "center" },
   nav: {
-    height: 76,
+    height: Platform.OS === "android" ? 74 : 64,
     paddingBottom: Platform.OS === "android" ? 10 : 0,
     borderTopWidth: StyleSheet.hairlineWidth,
     flexDirection: "row"
   },
   navItem: { flex: 1, alignItems: "center", justifyContent: "center", position: "relative" },
-  activeLine: { position: "absolute", top: 0, width: 28, height: 3, borderRadius: 10 }
+  activeLine: { position: "absolute", top: 3, width: 28, height: 3, borderRadius: 10 }
 });
