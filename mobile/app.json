@@ -7,14 +7,22 @@
     "userInterfaceStyle": "automatic",
     "scheme": "uidzone",
     "plugins": [
-      ["expo-secure-store", { "configureAndroidBackup": true }],
-      "expo-local-authentication",
-      "expo-screen-capture"
+      [
+        "expo-secure-store",
+        {
+          "configureAndroidBackup": true
+        }
+      ],
+      "expo-local-authentication"
     ],
     "android": {
       "package": "com.parvezdevs.uidzone",
       "versionCode": 4,
-      "permissions": ["INTERNET", "VIBRATE", "USE_BIOMETRIC"],
+      "permissions": [
+        "INTERNET",
+        "VIBRATE",
+        "USE_BIOMETRIC"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#000000",
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -24,7 +32,9 @@
     "ios": {
       "bundleIdentifier": "com.parvezdevs.uidzone",
       "supportsTablet": false,
-      "config": { "usesNonExemptEncryption": false }
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "icon": "./assets/icon.png",
     "splash": {
