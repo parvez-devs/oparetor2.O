@@ -14,7 +14,7 @@ import * as Clipboard from "expo-clipboard";
 import type { Preferences, UIDEntry } from "../types";
 import type { Theme } from "../theme";
 import { getPassword } from "../storage";
-import { formatCount } from "../utils";
+import { cleanProfileName, cleanUsername, formatCount } from "../utils";
 
 interface Props {
   entry: UIDEntry;
@@ -47,6 +47,7 @@ export function UIDCard({
   const y = useRef(new Animated.Value(8)).current;
   const x = useRef(new Animated.Value(0)).current;
   const [password, setPassword] = useState<string | null>(null);
+  const [imageFailed, setImageFailed] = useState(false);
 
   useEffect(() => {
     Animated.parallel([
@@ -54,6 +55,10 @@ export function UIDCard({
       Animated.timing(y, { toValue: 0, duration: 220, useNativeDriver: true })
     ]).start();
   }, [opacity, y]);
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [entry.profilePic]);
 
   useEffect(() => {
     let active = true;
@@ -112,7 +117,9 @@ export function UIDCard({
     if (value) await copy(value);
   };
 
-  const initials = (entry.name || entry.uid).slice(0, 2).toUpperCase();
+  const displayUsername = cleanUsername(entry.username);
+  const displayName = cleanProfileName(entry.name, displayUsername) || entry.uid;
+  const initials = displayName.slice(0, 2).toUpperCase();
   const compact = prefs.viewMode === "compact";
 
   return (
@@ -147,9 +154,11 @@ export function UIDCard({
             </Pressable>
           ) : null}
 
-          {entry.profilePic ? (
+          {entry.profilePic && !imageFailed ? (
             <Image
               source={{ uri: entry.profilePic }}
+              onError={() => setImageFailed(true)}
+              resizeMode="cover"
               style={[
                 styles.avatar,
                 compact && styles.avatarCompact,
@@ -171,8 +180,12 @@ export function UIDCard({
 
           <View style={styles.info}>
             <View style={styles.nameRow}>
-              <Text numberOfLines={1} style={[styles.name, { color: theme.text }]}>
-                {entry.name || entry.uid}
+              <Text
+                numberOfLines={compact ? 1 : 2}
+                ellipsizeMode="tail"
+                style={[styles.name, { color: theme.text }]}
+              >
+                {displayName}
               </Text>
               <Pressable onPress={() => onSaved(entry.id)} hitSlop={8}>
                 <Text style={{ color: entry.saved ? theme.warning : theme.muted, fontSize: 20 }}>
@@ -203,10 +216,14 @@ export function UIDCard({
               >
                 {fetching ? "FETCHING" : entry.status === "success" ? "OK" : entry.status === "error" ? "ERR" : "WAIT"}
               </Text>
-              {entry.username ? (
-                <Pressable onPress={() => copy(entry.username || "")}>
-                  <Text numberOfLines={1} style={{ color: theme.secondary, fontSize: 12 }}>
-                    {"@" + entry.username}
+              {displayUsername ? (
+                <Pressable onPress={() => copy(displayUsername)}>
+                  <Text
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                    style={[styles.username, { color: theme.secondary }]}
+                  >
+                    {"@" + displayUsername}
                   </Text>
                 </Pressable>
               ) : null}
@@ -248,7 +265,7 @@ export function UIDCard({
         </View>
 
         <View style={[styles.actions, { borderTopColor: theme.border }]}>
-          <Pressable style={styles.action} onPress={() => onFetch(entry)}>
+          <Pressable disabled={fetching} style={[styles.action, fetching && { opacity: 0.55 }]} onPress={() => onFetch(entry)}>
             <Text style={{ color: theme.primary, fontWeight: "700" }}>{fetching ? "Fetching…" : "↻ Fetch"}</Text>
           </Pressable>
           <Pressable
@@ -257,10 +274,10 @@ export function UIDCard({
           >
             <Text style={{ color: theme.secondary, fontWeight: "700" }}>Facebook</Text>
           </Pressable>
-          {entry.username && entry.hasInstagram ? (
+          {displayUsername && entry.hasInstagram ? (
             <Pressable
               style={styles.action}
-              onPress={() => Linking.openURL("https://www.instagram.com/" + entry.username + "/")}
+              onPress={() => Linking.openURL("https://www.instagram.com/" + encodeURIComponent(displayUsername) + "/")}
             >
               <Text style={{ color: "#d946ef", fontWeight: "700" }}>Instagram</Text>
             </Pressable>
@@ -311,8 +328,9 @@ const styles = StyleSheet.create({
   avatarCompact: { width: 54, height: 54 },
   avatarFallback: { alignItems: "center", justifyContent: "center" },
   info: { flex: 1, minWidth: 0 },
-  nameRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  name: { flex: 1, fontSize: 14, fontWeight: "800" },
+  nameRow: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
+  name: { flex: 1, fontSize: 15, lineHeight: 19, fontWeight: "800" },
+  username: { maxWidth: 165, fontSize: 12 },
   metaRow: { flexDirection: "row", alignItems: "center", gap: 7, marginTop: 4, flexWrap: "wrap" },
   badge: {
     borderWidth: 1,
@@ -326,7 +344,7 @@ const styles = StyleSheet.create({
   valueRow: { flexDirection: "row", alignItems: "center", gap: 7, minHeight: 24 },
   label: { width: 34, fontSize: 10, fontWeight: "700" },
   valuePress: { flex: 1 },
-  value: { fontSize: 12, fontFamily: "monospace" },
+  value: { fontSize: 13, fontFamily: "monospace" },
   actions: {
     borderTopWidth: StyleSheet.hairlineWidth,
     flexDirection: "row",
@@ -334,5 +352,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 5
   },
-  action: { paddingHorizontal: 8, paddingVertical: 7 }
+  action: { flexGrow: 1, minWidth: 72, alignItems: "center", paddingHorizontal: 8, paddingVertical: 8 }
 });
