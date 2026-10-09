@@ -13,7 +13,15 @@
           "configureAndroidBackup": true
         }
       ],
-      "expo-local-authentication"
+      "expo-local-authentication",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#000000",
+          "image": "./assets/icon.png",
+          "imageWidth": 180
+        }
+      ]
     ],
     "android": {
       "package": "com.parvezdevs.uidzone",
@@ -36,11 +44,6 @@
         "usesNonExemptEncryption": false
       }
     },
-    "icon": "./assets/icon.png",
-    "splash": {
-      "image": "./assets/icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#000000"
-    }
+    "icon": "./assets/icon.png"
   }
 }
