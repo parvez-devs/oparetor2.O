@@ -116,7 +116,7 @@ export async function importEncryptedBackup(passphrase: string): Promise<BackupP
   if (!secureEqual(expected, envelope.mac)) throw new Error("Wrong passphrase or damaged backup");
 
   const decrypted = CryptoJS.AES.decrypt(
-    { ciphertext: CryptoJS.enc.Base64.parse(envelope.ciphertext) } as CryptoJS.lib.CipherParams,
+    { ciphertext: CryptoJS.enc.Base64.parse(envelope.ciphertext) } as any,
     encKey,
     {
       iv: CryptoJS.enc.Hex.parse(envelope.iv),
