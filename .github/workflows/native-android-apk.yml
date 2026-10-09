@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - native-apk
+      - uid2o-polish
       - native-standalone-fix
     paths:
       - "mobile/**"
