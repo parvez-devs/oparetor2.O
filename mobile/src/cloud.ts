@@ -1,6 +1,6 @@
 import { SUPABASE_KEY, SUPABASE_URL } from "./config";
 import { refreshSession, saveSession } from "./auth";
-import type { CloudUIDRow, Preferences, Session, UIDEntry } from "./types";
+import { DEFAULT_PREFS, type CloudUIDRow, type Preferences, type Session, type UIDEntry } from "./types";
 
 async function authedFetch(
   sessionRef: { current: Session | null },
@@ -101,7 +101,7 @@ export async function pullPrefs(sessionRef: { current: Session | null }): Promis
   );
   if (!res.ok) throw new Error("Preference load failed");
   const rows = (await res.json()) as Array<{
-    theme: Preferences["theme"];
+    theme: "dark" | "light";
     font_size: Preferences["fontSize"];
     view_mode: Preferences["viewMode"];
     swipe_to_delete: boolean;
@@ -110,6 +110,7 @@ export async function pullPrefs(sessionRef: { current: Session | null }): Promis
   const row = rows[0];
   if (!row) return null;
   return {
+    ...DEFAULT_PREFS,
     theme: row.theme,
     fontSize: row.font_size,
     viewMode: row.view_mode,
@@ -124,6 +125,7 @@ export async function upsertPrefs(
 ) {
   const session = sessionRef.current;
   if (!session) return;
+  const cloudTheme = prefs.theme === "light" ? "light" : "dark";
   const res = await authedFetch(
     sessionRef,
     "/rest/v1/user_preferences?on_conflict=user_id",
@@ -132,7 +134,7 @@ export async function upsertPrefs(
       headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
       body: JSON.stringify({
         user_id: session.user.id,
-        theme: prefs.theme,
+        theme: cloudTheme,
         font_size: prefs.fontSize,
         view_mode: prefs.viewMode,
         swipe_to_delete: prefs.swipeToDelete,
