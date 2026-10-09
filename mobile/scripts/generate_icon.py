@@ -39,11 +39,11 @@ def render(foreground):
             if on:
                 color=(237,247,255,255) if x<222 else (60,170,255,255)
             row.extend(color)
-        pixels.extend(b"\\x00"+row)
+        pixels.extend(bytes([0])+row)
     def chunk(tag,data):
         return struct.pack(">I",len(data))+tag+data+struct.pack(">I",zlib.crc32(tag+data)&0xffffffff)
     header=struct.pack(">IIBBBBB",SIZE,SIZE,8,6,0,0,0)
-    return b"\\x89PNG\\r\\n\\x1a\\n"+chunk(b"IHDR",header)+chunk(b"IDAT",zlib.compress(bytes(pixels),6))+chunk(b"IEND",b"")
+    return bytes([137,80,78,71,13,10,26,10])+chunk(b"IHDR",header)+chunk(b"IDAT",zlib.compress(bytes(pixels),6))+chunk(b"IEND",b"")
 
 (ROOT/"icon.png").write_bytes(render(False))
 (ROOT/"adaptive-icon.png").write_bytes(render(True))
