@@ -277,7 +277,11 @@ export function UIDCard({
 const styles = StyleSheet.create({
   swipeWrap: { marginBottom: 9, position: "relative" },
   deleteBehind: {
-    ...StyleSheet.absoluteFillObject,
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
     borderRadius: 14,
     alignItems: "flex-end",
     justifyContent: "center",
