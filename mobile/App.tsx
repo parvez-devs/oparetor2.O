@@ -500,10 +500,14 @@ export default function App() {
   };
 
   const setCollection = async (id: string, collection?: string) => {
-    const next = uidsRef.current.map((u) =>
-      u.id === id ? { ...u, collection, updatedAt: new Date().toISOString() } : u
-    );
-    await commit(next);
+    const changed: UIDEntry[] = [];
+    const next = uidsRef.current.map((u) => {
+      if (u.id !== id) return u;
+      const value = { ...u, collection, updatedAt: new Date().toISOString() };
+      changed.push(value);
+      return value;
+    });
+    await commit(next, changed);
   };
 
   const clearAll = async () => {
