@@ -61,10 +61,10 @@ export function AuthScreen({ onSession }: { onSession: (session: Session) => voi
     >
       <Animated.View style={[styles.panel, { opacity, transform: [{ scale }] }]}>
         <View style={styles.logo}>
-          <Text style={styles.logoText}>U</Text>
+          <Text style={styles.logoText}>2.O</Text>
         </View>
-        <Text style={styles.title}>{mode === "login" ? "UID Operator" : "Create account"}</Text>
-        <Text style={styles.sub}>{mode === "login" ? "Login to continue" : "Create your UIDZone account"}</Text>
+        <Text style={styles.title}>{mode === "login" ? "UID 2.O" : "Create account"}</Text>
+        <Text style={styles.sub}>{mode === "login" ? "Login to continue" : "Create your UID 2.O account"}</Text>
 
         <Text style={styles.label}>EMAIL</Text>
         <TextInput
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     elevation: 9
   },
-  logoText: { color: "#fff", fontSize: 28, fontWeight: "900" },
+  logoText: { color: "#fff", fontSize: 22, fontWeight: "900", letterSpacing: -0.6 },
   title: { color: "#fff", fontSize: 22, fontWeight: "900", textAlign: "center" },
   sub: { color: "#6b7280", fontSize: 12, textAlign: "center", marginTop: 4, marginBottom: 28 },
   label: { color: "#6b7280", fontSize: 10, fontWeight: "800", letterSpacing: 1.2, marginBottom: 6, marginTop: 12 },
