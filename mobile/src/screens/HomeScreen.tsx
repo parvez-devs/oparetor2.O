@@ -32,6 +32,7 @@ export function HomeScreen(props: Props) {
   const [search, setSearch] = useState("");
   const [showPasswords, setShowPasswords] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [selectionMode, setSelectionMode] = useState(false);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -139,24 +140,45 @@ export function HomeScreen(props: Props) {
               ) : null}
               <Pressable
                 style={[styles.tool, { borderColor: props.theme.border }]}
-                onPress={() =>
-                  setSelected(
-                    selected.size === props.uids.length ? new Set() : new Set(props.uids.map((u) => u.id))
-                  )
-                }
+                onPress={() => {
+                  if (selectionMode) {
+                    setSelectionMode(false);
+                    setSelected(new Set());
+                  } else {
+                    setSelectionMode(true);
+                  }
+                }}
               >
-                <Text style={{ color: props.theme.secondary }}>
-                  {selected.size ? selected.size + " selected" : "Select"}
+                <Text style={{ color: selectionMode ? props.theme.primary : props.theme.secondary }}>
+                  {selectionMode ? "Done" : "Select"}
                 </Text>
               </Pressable>
-              {selected.size ? (
+              {selectionMode ? (
                 <>
-                  <Pressable style={[styles.tool, { borderColor: props.theme.border }]} onPress={() => copySelected(false)}>
-                    <Text style={{ color: props.theme.primary }}>Copy UID</Text>
+                  <Pressable
+                    style={[styles.tool, { borderColor: props.theme.border }]}
+                    onPress={() =>
+                      setSelected(
+                        selected.size === filtered.length
+                          ? new Set()
+                          : new Set(filtered.map((u) => u.id))
+                      )
+                    }
+                  >
+                    <Text style={{ color: props.theme.secondary }}>
+                      {selected.size === filtered.length && filtered.length ? "Clear" : "All"}
+                    </Text>
                   </Pressable>
-                  <Pressable style={[styles.tool, { borderColor: props.theme.border }]} onPress={() => copySelected(true)}>
-                    <Text style={{ color: props.theme.primary }}>UID|Pass</Text>
-                  </Pressable>
+                  {selected.size ? (
+                    <>
+                      <Pressable style={[styles.tool, { borderColor: props.theme.border }]} onPress={() => copySelected(false)}>
+                        <Text style={{ color: props.theme.primary }}>Copy UID</Text>
+                      </Pressable>
+                      <Pressable style={[styles.tool, { borderColor: props.theme.border }]} onPress={() => copySelected(true)}>
+                        <Text style={{ color: props.theme.primary }}>UID|Pass</Text>
+                      </Pressable>
+                    </>
+                  ) : null}
                 </>
               ) : null}
             </View>
@@ -170,7 +192,7 @@ export function HomeScreen(props: Props) {
             prefs={props.prefs}
             showPassword={showPasswords}
             selected={selected.has(item.id)}
-            onSelect={toggleSelect}
+            onSelect={selectionMode ? toggleSelect : undefined}
             onSaved={props.onSaved}
             onFetch={(entry) => props.onFetch([entry])}
             onDelete={props.onDelete}
@@ -196,7 +218,7 @@ export function HomeScreen(props: Props) {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: 12, paddingBottom: 24 },
+  content: { padding: 12, paddingBottom: 30 },
   stats: {
     borderWidth: 1,
     borderRadius: 12,
