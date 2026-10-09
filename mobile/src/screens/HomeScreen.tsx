@@ -91,7 +91,7 @@ export function HomeScreen(props: Props) {
         initialNumToRender={12}
         maxToRenderPerBatch={16}
         windowSize={7}
-        removeClippedSubviews
+        removeClippedSubviews={false}
         refreshControl={
           <RefreshControl
             refreshing={props.syncing}
@@ -108,7 +108,7 @@ export function HomeScreen(props: Props) {
               <Text style={{ color: props.theme.primary }}>▣ {stats.pic}</Text>
               <Text style={{ color: "#d946ef", fontWeight: "800" }}>IG {stats.ig}</Text>
               <Text style={{ color: props.theme.error }}>! {stats.error}</Text>
-              <View style={{ flex: 1 }} />
+              <View style={{ flexGrow: 1 }} />
               <Pressable onPress={() => setShowPasswords((v) => !v)} style={styles.smallButton}>
                 <Text style={{ color: showPasswords ? props.theme.primary : props.theme.secondary }}>
                   {showPasswords ? "Hide pass" : "Show pass"}
@@ -204,7 +204,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     flexDirection: "row",
     alignItems: "center",
-    gap: 11,
+    gap: 6,
+    flexWrap: "wrap",
     marginBottom: 10
   },
   statMain: { fontWeight: "800" },
