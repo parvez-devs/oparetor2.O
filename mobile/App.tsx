@@ -134,9 +134,15 @@ export default function App() {
     try {
       await upsertUIDs(sessionRef, cloudChanged);
       cloudSuccess();
-    } catch {
-      setSyncStatus("error");
-      setAppError("Cloud sync is temporarily unavailable. Local changes are safe and will be retried.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      const conflict = message.includes("(409)") || message.toLowerCase().includes("conflict");
+      setSyncStatus(conflict ? "conflict" : "error");
+      setAppError(
+        conflict
+          ? "A cloud conflict was detected. Local data is preserved; refresh to reconcile with the newest cloud copy."
+          : "Cloud sync is temporarily unavailable. Local changes are safe and will be retried."
+      );
     }
   };
 
@@ -185,9 +191,15 @@ export default function App() {
 
         cloudSuccess();
         setAppError("");
-      } catch {
-        setSyncStatus("error");
-        setAppError("Cloud service could not be reached. UID 2.O is using local data.");
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "";
+        const conflict = message.includes("(409)") || message.toLowerCase().includes("conflict");
+        setSyncStatus(conflict ? "conflict" : "error");
+        setAppError(
+          conflict
+            ? "Cloud and local versions need reconciliation. UID 2.O kept the local copy safe."
+            : "Cloud service could not be reached. UID 2.O is using local data."
+        );
       }
     } finally {
       if (showSpinner) setSyncing(false);
