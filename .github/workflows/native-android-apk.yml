@@ -63,6 +63,9 @@ jobs:
       - name: Type check
         run: npx tsc --noEmit
 
+      - name: Generate UID 2.O launcher icons
+        run: python3 scripts/generate_icon.py
+
       - name: Generate native Android project
         env:
           CI: "1"
