@@ -129,14 +129,14 @@ export function SettingsScreen({
       </Pressable>
 
       <Text style={{ color: theme.muted, textAlign: "center", fontSize: 10, marginTop: 14 }}>
-        UIDZone Native 1.0.0 · React Native
+        UID 2.O Native 1.1.0 · React Native
       </Text>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { padding: 16, paddingBottom: 34 },
+  content: { padding: 16, paddingBottom: 44 },
   title: { fontSize: 22, fontWeight: "900", marginBottom: 16 },
   sectionTitle: { fontSize: 10, letterSpacing: 1.2, fontWeight: "800", marginTop: 16, marginBottom: 8 },
   segment: { flexDirection: "row", borderWidth: 1, borderRadius: 12, padding: 4 },
