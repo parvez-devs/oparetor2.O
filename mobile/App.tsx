@@ -3,8 +3,8 @@ import {
   ActivityIndicator,
   Alert,
   Pressable,
-  SafeAreaView,
   StatusBar,
+  Platform,
   StyleSheet,
   Text,
   View,
@@ -309,7 +309,7 @@ export default function App() {
     return (
       <View style={[styles.loader, { backgroundColor: "#080d14" }]}>
         <ActivityIndicator color="#3b9dff" size="large" />
-        <Text style={{ color: "#8899bb", marginTop: 12 }}>UIDZone</Text>
+        <Text style={{ color: "#8899bb", marginTop: 12 }}>UID 2.O</Text>
       </View>
     );
   }
@@ -324,11 +324,11 @@ export default function App() {
   ];
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: theme.bg }]}>
+    <View style={[styles.safe, { backgroundColor: theme.bg, paddingTop: Platform.OS === "android" ? StatusBar.currentHeight || 24 : 0 }]}>
       <StatusBar barStyle={prefs.theme === "dark" ? "light-content" : "dark-content"} backgroundColor={theme.bg} />
 
       <View style={[styles.header, { backgroundColor: theme.card, borderBottomColor: theme.border }]}>
-        <Text style={[styles.brand, { color: theme.text }]}>UID <Text style={{ color: theme.primary }}>Operator</Text></Text>
+        <Text style={[styles.brand, { color: theme.text }]}>UID <Text style={{ color: theme.primary }}>2.O</Text></Text>
         <Pressable onPress={() => setTab("home")} style={styles.headerButton}>
           <Text style={{ color: theme.muted, fontSize: 18 }}>⌕</Text>
         </Pressable>
@@ -402,7 +402,7 @@ export default function App() {
           );
         })}
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -419,7 +419,8 @@ const styles = StyleSheet.create({
   brand: { fontSize: 18, fontWeight: "900", flex: 1 },
   headerButton: { width: 42, height: 42, alignItems: "center", justifyContent: "center" },
   nav: {
-    height: 66,
+    height: 76,
+    paddingBottom: Platform.OS === "android" ? 10 : 0,
     borderTopWidth: StyleSheet.hairlineWidth,
     flexDirection: "row"
   },
