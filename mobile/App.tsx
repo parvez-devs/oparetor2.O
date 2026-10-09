@@ -74,8 +74,8 @@ function fromCloud(row: CloudUIDRow, local?: UIDEntry): UIDEntry {
     saved: row.saved,
     reInput: row.re_input,
     hasPassword: local?.hasPassword,
-    collection: local?.collection,
-    tags: local?.tags,
+    collection: row.collection || local?.collection,
+    tags: row.tags?.length ? row.tags : local?.tags,
     updatedAt: row.updated_at || local?.updatedAt
   };
 }
