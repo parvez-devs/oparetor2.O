@@ -15,8 +15,8 @@ permissions:
 
 jobs:
   build-apk:
-    runs-on: ubuntu-latest
-    timeout-minutes: 50
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
     defaults:
       run:
         working-directory: mobile
@@ -33,29 +33,41 @@ jobs:
           cache-dependency-path: mobile/package.json
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Install Android API 36
+        shell: bash
         run: |
-          yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+          set -euo pipefail
+          SDKMANAGER="${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then
+            SDKMANAGER="$(command -v sdkmanager)"
+          fi
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+          echo "sdk.dir=${ANDROID_HOME}" > /tmp/android-local.properties
 
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
+      - name: Align Expo dependencies
+        run: npx expo install --fix
+
       - name: Validate Expo project
         run: npx expo-doctor
+
+      - name: Type check
+        run: npx tsc --noEmit
 
       - name: Generate native Android project
         env:
           CI: "1"
-        run: npx expo prebuild --platform android --clean
+        run: |
+          npx expo prebuild --platform android --clean
+          cp /tmp/android-local.properties android/local.properties
 
       - name: Build installable APK
         run: |
@@ -67,6 +79,7 @@ jobs:
         run: |
           mkdir -p dist
           cp android/app/build/outputs/apk/debug/app-debug.apk dist/UIDZone-Native.apk
+          ls -lh dist/UIDZone-Native.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
