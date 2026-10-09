@@ -65,6 +65,8 @@ export interface CloudUIDRow {
   fetched_at: string | null;
   saved: boolean;
   re_input: boolean;
+  collection: string | null;
+  tags: string[];
   created_at?: string;
   updated_at?: string;
 }
