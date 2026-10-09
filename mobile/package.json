@@ -8,7 +8,7 @@
     "android": "expo run:android",
     "prebuild": "expo prebuild",
     "doctor": "expo-doctor",
-    "v3:deps": "npx expo install @shopify/flash-list @react-native-community/netinfo @expo/vector-icons expo-haptics expo-local-authentication expo-screen-capture expo-image expo-file-system expo-document-picker expo-sharing expo-crypto expo-linear-gradient lottie-react-native && npm install crypto-js --no-audit --no-fund"
+    "v3:deps": "npx expo install @shopify/flash-list @react-native-community/netinfo @expo/vector-icons expo-haptics expo-local-authentication expo-screen-capture expo-image expo-file-system expo-document-picker expo-sharing expo-crypto expo-linear-gradient expo-font expo-splash-screen lottie-react-native && npm install crypto-js --no-audit --no-fund"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
