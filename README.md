@@ -1,83 +1,93 @@
 # UID 2.O
 
-UID 2.O is the native Android companion app for the UID Operator project. The Android app is built with React Native / Expo and uses native UI components — it is **not a WebView wrapper**.
+UID 2.O is the native Android version of the UID Operator web panel. The Android application is built with React Native / Expo and uses native components — it is **not a WebView wrapper**.
 
-## Android app
+## Current Android release
 
-Current release: **v2.0.0**
+**v2.1.0 — Web Panel Parity**
 
-### Main features
+Download the APK from:
 
-- Native Home, Import, Saved and Settings screens
-- Supabase login and cloud sync
-- UID profile lookup through the existing UID API
-- Local password storage with secure session storage
-- Search, retry, copy, save and delete actions
-- Dark/light theme support
-- Native scrolling, pull-to-refresh, haptics and swipe gestures
-- Standalone APK with the JavaScript bundle embedded — Metro is not required
-- App name and launcher branding: **UID 2.O**
+https://github.com/parvez-devs/oparetor2.O/releases/tag/v2.1.0
 
-## Download
+APK filename:
 
-Open the repository **Releases** page and download:
+`UID-2.O-v2.1.0.apk`
 
-`UID-2.O-v2.0.0.apk`
+> Remove any old debug APK that shows “Unable to load script”, then install the current standalone release.
 
-Release page:
+## Web → Native parity
 
-https://github.com/parvez-devs/oparetor2.O/releases/tag/v2.0.0
+The native app now follows the current web panel point-by-point:
 
-> If an older debug APK is installed and shows “Unable to load script”, uninstall it first and install the v2.0.0 release APK.
-
-## Build locally
-
-The native source lives in `mobile/`.
-
-```bash
-cd mobile
-npm install
-npx expo-doctor
-npx expo prebuild --platform android --clean
-cd android
-./gradlew :app:assembleRelease
-```
-
-The release APK is created under:
-
-```
-mobile/android/app/build/outputs/apk/release/
-```
-
-## Automated APK build
-
-GitHub Actions workflow:
-
-`.github/workflows/native-android-apk.yml`
-
-For main-branch native changes it:
-
-1. Installs Android API 36.
-2. Installs and aligns Expo dependencies.
-3. Generates the UID 2.O launcher icons.
-4. Runs Expo Doctor and TypeScript checks.
-5. Generates the native Android project.
-6. Builds a standalone release APK.
-7. Verifies that `assets/index.android.bundle` exists inside the APK.
-8. Verifies APK signing.
-9. Uploads the APK artifact.
-10. Publishes/updates GitHub Release `v2.0.0`.
+- Same top header hierarchy and UID 2.O branding
+- Same four-tab bottom navigation: Home / Import / Saved / Settings
+- Same dark/light palette and card/border/text colors
+- Home stats bar with Total, success, profile-picture, Instagram and error counts
+- Global show/hide password control
+- Retry failed action
+- 3-dot Home menu with pending fetch, failed retry, select/deselect, copy and delete-all actions
+- Same search field placement
+- UID card hierarchy matching the web panel
+  - selection checkbox
+  - 72px profile image
+  - name and Instagram indicator
+  - save star
+  - OK / Err / Wait status
+  - 3-dot card menu for Fetch / Open FB / Delete
+  - username and follower count
+  - UID row and password row with copy actions
+- Saved page with title, count badge, password toggle, search and matching empty state
+- Import page with format examples, large textarea, progress bar and Import button
+- Settings sections matching the web panel:
+  - Theme
+  - Font Size
+  - View Mode
+  - Preferences
+  - Storage
+- Supabase authentication and cloud sync
+- Existing UID profile API integration
+- Local password storage using secure device storage
+- Native scrolling, pull-to-refresh, haptics and swipe-to-delete preference
+- Standalone APK with `assets/index.android.bundle` embedded — Metro/USB/PC is not required
 
 ## Web app
-
-The existing web application remains available separately at:
 
 https://uidzone.xyz
 
 The native Android app reuses the existing Supabase project and UID API backend.
 
-## Package
+## Build locally
 
-Android application ID:
+Native source:
+
+`mobile/`
+
+```bash
+cd mobile
+npm install
+python3 scripts/generate_icon.py
+npx expo-doctor
+npx tsc --noEmit
+npx expo prebuild --platform android --clean
+cd android
+./gradlew :app:assembleRelease
+```
+
+Release APK output:
+
+```
+mobile/android/app/build/outputs/apk/release/
+```
+
+## Automated build and release
+
+Workflow:
+
+`.github/workflows/native-android-apk.yml`
+
+The workflow validates Expo config, runs TypeScript checks, generates Android native files, builds the standalone release APK, verifies the embedded JavaScript bundle and APK signature, uploads the build artifact, and publishes GitHub Release **v2.1.0** only after all build steps pass.
+
+## Android package
 
 `com.parvezdevs.uidzone`

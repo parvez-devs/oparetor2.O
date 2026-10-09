@@ -92,25 +92,25 @@ jobs:
             echo "Release APK not found" >&2
             exit 1
           fi
-          cp "$APK" "dist/UID-2.O-v2.0.0.apk"
+          cp "$APK" "dist/UID-2.O-v2.1.0.apk"
 
-          if ! unzip -l "dist/UID-2.O-v2.0.0.apk" | grep -q 'assets/index.android.bundle'; then
+          if ! unzip -l "dist/UID-2.O-v2.1.0.apk" | grep -q 'assets/index.android.bundle'; then
             echo "Standalone JS bundle is missing from APK" >&2
             exit 1
           fi
 
           APKSIGNER="${ANDROID_HOME}/build-tools/36.0.0/apksigner"
           if [ -x "$APKSIGNER" ]; then
-            "$APKSIGNER" verify --verbose "dist/UID-2.O-v2.0.0.apk"
+            "$APKSIGNER" verify --verbose "dist/UID-2.O-v2.1.0.apk"
           fi
 
-          ls -lh "dist/UID-2.O-v2.0.0.apk"
+          ls -lh "dist/UID-2.O-v2.1.0.apk"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: UID-2.O-v2.0.0
-          path: mobile/dist/UID-2.O-v2.0.0.apk
+          name: UID-2.O-v2.1.0
+          path: mobile/dist/UID-2.O-v2.1.0.apk
           if-no-files-found: error
           retention-days: 30
 
@@ -120,29 +120,32 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          TAG="v2.0.0"
-          APK="dist/UID-2.O-v2.0.0.apk"
+          TAG="v2.1.0"
+          APK="dist/UID-2.O-v2.1.0.apk"
           NOTES="/tmp/uid2-release-notes.md"
 
           cat > "$NOTES" <<'EOF'
-          # UID 2.O v2.0.0
+          # UID 2.O v2.1.0
 
-          Native Android release of UID 2.O.
+          Web-panel parity release.
 
-          - Standalone React Native APK; no Metro server required
-          - UID 2.O app name and launcher branding
-          - Fixed Android status-bar/header overlap
-          - Fixed bottom navigation/system navigation overlap
-          - Improved Home statistics wrapping and Android list rendering
-          - Decodes HTML entities in profile names
-          - Supabase authentication and cloud sync
-          - Existing UID profile API integration
+          - Native Home layout rebuilt to match the web panel
+          - Same stats bar, password toggle, retry action and 3-dot batch menu
+          - UID cards now match the web card hierarchy: checkbox, 72px avatar, name, Instagram indicator, star, status, 3-dot menu, username/followers, UID/password rows
+          - Removed the extra native-only bottom action row from UID cards
+          - Saved screen now matches web title/count/password toggle/search/empty state
+          - Import screen now matches web title, format card, textarea, progress and import controls
+          - Settings now mirrors the web Theme, Font Size, View Mode, Preferences and Storage sections
+          - Auth spacing and controls aligned with the web panel while keeping the UID 2.O product name
+          - Dark/light colors aligned with the web CSS variables
+          - Standalone JavaScript bundle embedded; Metro is not required
+          - Supabase auth/cloud sync and existing UID API remain connected
 
-          Install the attached `UID-2.O-v2.0.0.apk`.
+          Install the attached `UID-2.O-v2.1.0.apk`.
           EOF
 
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release upload "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" --clobber
           else
-            gh release create "$TAG" "$APK"               --repo "$GITHUB_REPOSITORY"               --target "$GITHUB_SHA"               --title "UID 2.O v2.0.0"               --notes-file "$NOTES"
+            gh release create "$TAG" "$APK"               --repo "$GITHUB_REPOSITORY"               --target "$GITHUB_SHA"               --title "UID 2.O v2.1.0"               --notes-file "$NOTES"
           fi
