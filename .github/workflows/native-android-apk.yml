@@ -12,6 +12,10 @@ on:
       - "mobile/**"
       - ".github/workflows/native-android-apk.yml"
 
+concurrency:
+  group: native-apk-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
