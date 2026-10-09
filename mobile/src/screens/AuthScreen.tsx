@@ -63,8 +63,8 @@ export function AuthScreen({ onSession }: { onSession: (session: Session) => voi
         <View style={styles.logo}>
           <Text style={styles.logoText}>U</Text>
         </View>
-        <Text style={styles.title}>{mode === "login" ? "UID Operator" : "Create account"}</Text>
-        <Text style={styles.sub}>{mode === "login" ? "Login to continue" : "Create your UIDZone account"}</Text>
+        <Text style={styles.title}>{mode === "login" ? "UID 2.O" : "Create account"}</Text>
+        <Text style={styles.sub}>{mode === "login" ? "Login to continue" : "Create your UID 2.O account"}</Text>
 
         <Text style={styles.label}>EMAIL</Text>
         <TextInput
