@@ -16,6 +16,18 @@ import type { Theme } from "../theme";
 import { getPassword } from "../storage";
 import { formatCount } from "../utils";
 
+function decodeProfileName(value: string): string {
+  return value
+    .replace(/&#(\\d+);/g, (_, n: string) => String.fromCodePoint(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, n: string) => String.fromCodePoint(parseInt(n, 16)))
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/\\s+/g, " ")
+    .trim();
+}
+
 interface Props {
   entry: UIDEntry;
   userId: string;
@@ -112,7 +124,8 @@ export function UIDCard({
     if (value) await copy(value);
   };
 
-  const initials = (entry.name || entry.uid).slice(0, 2).toUpperCase();
+  const displayName = decodeProfileName(entry.name || entry.uid);
+  const initials = displayName.slice(0, 2).toUpperCase();
   const compact = prefs.viewMode === "compact";
 
   return (
@@ -172,7 +185,7 @@ export function UIDCard({
           <View style={styles.info}>
             <View style={styles.nameRow}>
               <Text numberOfLines={1} style={[styles.name, { color: theme.text }]}>
-                {entry.name || entry.uid}
+                {displayName}
               </Text>
               <Pressable onPress={() => onSaved(entry.id)} hitSlop={8}>
                 <Text style={{ color: entry.saved ? theme.warning : theme.muted, fontSize: 20 }}>
