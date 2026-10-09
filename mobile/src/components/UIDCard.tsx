@@ -406,13 +406,13 @@ function UIDCardImpl({
           <Text style={[styles.sheetTitle, { color: theme.text }]} numberOfLines={1}>{displayName}</Text>
           <Text style={{ color: theme.muted, fontFamily: "monospace", fontSize: 11, marginTop: 3 }}>{entry.uid}</Text>
 
-          <SheetAction icon="user" label="Open profile inspector" color={theme.text} onPress={() => { setMenuOpen(false); onOpen(entry); }} />
-          <SheetAction icon="refresh-cw" label={fetching ? "Fetching…" : "Fetch profile"} color={theme.primary} disabled={fetching} onPress={() => { setMenuOpen(false); onFetch(entry); }} />
+          <SheetAction icon="account-outline" label="Open profile inspector" color={theme.text} onPress={() => { setMenuOpen(false); onOpen(entry); }} />
+          <SheetAction icon="refresh" label={fetching ? "Fetching…" : "Fetch profile"} color={theme.primary} disabled={fetching} onPress={() => { setMenuOpen(false); onFetch(entry); }} />
           <SheetAction icon="facebook" label="Open Facebook" color={theme.primary} onPress={() => { setMenuOpen(false); openFacebook(); }} />
           {entry.username ? (
             <SheetAction icon="instagram" label="Open Instagram" color="#e04cf3" onPress={() => { setMenuOpen(false); Linking.openURL("https://www.instagram.com/" + entry.username + "/"); }} />
           ) : null}
-          <SheetAction icon="copy" label="Copy UID" color={theme.text} onPress={() => { setMenuOpen(false); copy(entry.uid, "UID"); }} />
+          <SheetAction icon="content-copy" label="Copy UID" color={theme.text} onPress={() => { setMenuOpen(false); copy(entry.uid, "UID"); }} />
           <SheetAction icon={entry.saved ? "star" : "star-outline"} label={entry.saved ? "Remove from Saved" : "Save UID"} color={entry.saved ? theme.warning : theme.text} onPress={() => { setMenuOpen(false); onSaved(entry.id); }} />
           <View style={[styles.sheetDivider, { backgroundColor: theme.border }]} />
           <SheetAction icon="trash-can-outline" label="Delete" color={theme.error} onPress={() => { setMenuOpen(false); onDelete(entry.id); }} />
