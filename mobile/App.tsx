@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Platform,
   Pressable,
   SafeAreaView,
   StatusBar,
@@ -37,16 +38,17 @@ import {
 } from "./src/storage";
 import { DEFAULT_PREFS, type CloudUIDRow, type Preferences, type Session, type UIDEntry } from "./src/types";
 import { getTheme } from "./src/theme";
-import { uuid } from "./src/utils";
+import { normalizeProfileFields, uuid } from "./src/utils";
 
 type Tab = "home" | "import" | "saved" | "settings";
 
 function fromCloud(row: CloudUIDRow, local?: UIDEntry): UIDEntry {
+  const profile = normalizeProfileFields(row.name, row.username);
   return {
     id: row.id,
     uid: row.uid,
-    name: row.name || undefined,
-    username: row.username || undefined,
+    name: profile.name,
+    username: profile.username,
     profilePic: row.profile_pic || undefined,
     followerCount: row.follower_count ?? undefined,
     hasInstagram: row.has_instagram,
@@ -176,12 +178,15 @@ export default function App() {
             const target = chunk.find((c) => c.id === entry.id);
             if (!target) return entry;
             const result = resultMap.get(entry.uid);
+            const profile = result
+              ? normalizeProfileFields(result.name || entry.name, result.username || entry.username)
+              : null;
             const next: UIDEntry = result
               ? {
                   ...entry,
                   status: result.status === "success" || result.name ? "success" : "error",
-                  name: result.name || entry.name,
-                  username: result.username || entry.username,
+                  name: profile?.name,
+                  username: profile?.username,
                   profilePic: result.profile_pic || entry.profilePic,
                   followerCount: result.follower_count ?? entry.followerCount,
                   hasInstagram: result.has_instagram ?? entry.hasInstagram,
@@ -309,7 +314,7 @@ export default function App() {
     return (
       <View style={[styles.loader, { backgroundColor: "#080d14" }]}>
         <ActivityIndicator color="#3b9dff" size="large" />
-        <Text style={{ color: "#8899bb", marginTop: 12 }}>UIDZone</Text>
+        <Text style={{ color: "#8899bb", marginTop: 12 }}>UID 2.O</Text>
       </View>
     );
   }
@@ -325,10 +330,14 @@ export default function App() {
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.bg }]}>
-      <StatusBar barStyle={prefs.theme === "dark" ? "light-content" : "dark-content"} backgroundColor={theme.bg} />
+      <StatusBar
+        translucent
+        barStyle={prefs.theme === "dark" ? "light-content" : "dark-content"}
+        backgroundColor="transparent"
+      />
 
       <View style={[styles.header, { backgroundColor: theme.card, borderBottomColor: theme.border }]}>
-        <Text style={[styles.brand, { color: theme.text }]}>UID <Text style={{ color: theme.primary }}>Operator</Text></Text>
+        <Text style={[styles.brand, { color: theme.text }]}>UID <Text style={{ color: theme.primary }}>2.O</Text></Text>
         <Pressable onPress={() => setTab("home")} style={styles.headerButton}>
           <Text style={{ color: theme.muted, fontSize: 18 }}>⌕</Text>
         </Pressable>
@@ -407,21 +416,26 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1 },
+  safe: {
+    flex: 1,
+    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight || 0 : 0
+  },
   loader: { flex: 1, alignItems: "center", justifyContent: "center" },
   header: {
-    height: 52,
+    height: 56,
     borderBottomWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center"
   },
-  brand: { fontSize: 18, fontWeight: "900", flex: 1 },
+  brand: { fontSize: 20, fontWeight: "900", flex: 1, letterSpacing: -0.3 },
   headerButton: { width: 42, height: 42, alignItems: "center", justifyContent: "center" },
   nav: {
-    height: 66,
+    height: 76,
     borderTopWidth: StyleSheet.hairlineWidth,
-    flexDirection: "row"
+    flexDirection: "row",
+    paddingTop: 4,
+    paddingBottom: 8
   },
   navItem: { flex: 1, alignItems: "center", justifyContent: "center", position: "relative" },
   activeLine: { position: "absolute", top: 0, width: 28, height: 3, borderRadius: 10 }
