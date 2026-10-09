@@ -4,7 +4,7 @@ export const themes = {
   dark: {
     bg: "#080d14",
     card: "#0e1623",
-    card2: "#111c2b",
+    card2: "#1a2540",
     border: "#1a2540",
     primary: "#3b9dff",
     primaryDim: "#1a4a80",
@@ -13,23 +13,23 @@ export const themes = {
     warning: "#f59e0b",
     text: "#e8f0fe",
     secondary: "#8899bb",
-    muted: "#5f6f8e",
-    input: "#0b1320"
+    muted: "#4a5878",
+    input: "#080d14"
   },
   light: {
     bg: "#f0f4ff",
     card: "#ffffff",
-    card2: "#f8faff",
+    card2: "#dde5f5",
     border: "#dde5f5",
-    primary: "#238cff",
-    primaryDim: "#cfe6ff",
-    success: "#16a34a",
-    error: "#dc2626",
-    warning: "#d97706",
+    primary: "#3b9dff",
+    primaryDim: "#1a4a80",
+    success: "#22c55e",
+    error: "#ef4444",
+    warning: "#f59e0b",
     text: "#0d1b3e",
     secondary: "#4a5878",
-    muted: "#70809e",
-    input: "#ffffff"
+    muted: "#4a5878",
+    input: "#f0f4ff"
   }
 };
 

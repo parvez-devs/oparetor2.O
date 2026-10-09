@@ -14,17 +14,16 @@ import * as Clipboard from "expo-clipboard";
 import type { Preferences, UIDEntry } from "../types";
 import type { Theme } from "../theme";
 import { getPassword } from "../storage";
-import { formatCount } from "../utils";
 
 function decodeProfileName(value: string): string {
   return value
-    .replace(/&#(\\d+);/g, (_, n: string) => String.fromCodePoint(Number(n)))
+    .replace(/&#(\d+);/g, (_, n: string) => String.fromCodePoint(Number(n)))
     .replace(/&#x([0-9a-f]+);/gi, (_, n: string) => String.fromCodePoint(parseInt(n, 16)))
     .replace(/&amp;/g, "&")
     .replace(/&quot;/g, '"')
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
-    .replace(/\\s+/g, " ")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
@@ -56,9 +55,11 @@ export function UIDCard({
   fetching
 }: Props) {
   const opacity = useRef(new Animated.Value(0)).current;
-  const y = useRef(new Animated.Value(8)).current;
+  const y = useRef(new Animated.Value(7)).current;
   const x = useRef(new Animated.Value(0)).current;
   const [password, setPassword] = useState<string | null>(null);
+  const [copied, setCopied] = useState<"uid" | "pass" | "user" | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     Animated.parallel([
@@ -85,56 +86,63 @@ export function UIDCard({
     () =>
       PanResponder.create({
         onMoveShouldSetPanResponder: (_, g) =>
-          prefs.swipeToDelete &&
-          g.dx < -12 &&
-          Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
+          prefs.swipeToDelete && g.dx < -12 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
         onPanResponderMove: (_, g) => {
-          if (!prefs.swipeToDelete) return;
-          x.setValue(Math.max(-110, Math.min(0, g.dx)));
+          if (prefs.swipeToDelete) x.setValue(Math.max(-100, Math.min(0, g.dx)));
         },
         onPanResponderRelease: (_, g) => {
-          if (prefs.swipeToDelete && g.dx < -78) {
-            Animated.timing(x, {
-              toValue: -420,
-              duration: 180,
-              useNativeDriver: true
-            }).start(() => onDelete(entry.id));
+          if (prefs.swipeToDelete && g.dx < -60) {
+            Animated.timing(x, { toValue: -420, duration: 170, useNativeDriver: true }).start(() => onDelete(entry.id));
           } else {
-            Animated.spring(x, {
-              toValue: 0,
-              useNativeDriver: true,
-              bounciness: 5
-            }).start();
+            Animated.spring(x, { toValue: 0, useNativeDriver: true, bounciness: 4 }).start();
           }
         },
-        onPanResponderTerminate: () => {
-          Animated.spring(x, { toValue: 0, useNativeDriver: true }).start();
-        }
+        onPanResponderTerminate: () => Animated.spring(x, { toValue: 0, useNativeDriver: true }).start()
       }),
     [entry.id, onDelete, prefs.swipeToDelete, x]
   );
 
-  const copy = async (value: string) => {
+  const copy = async (value: string, type: "uid" | "pass" | "user") => {
+    if (!value) return;
     await Clipboard.setStringAsync(value);
+    setCopied(type);
     Vibration.vibrate(8);
+    setTimeout(() => setCopied((current) => (current === type ? null : current)), 1600);
   };
 
   const copyPass = async () => {
     const value = password || (await getPassword(userId, entry.id));
-    if (value) await copy(value);
+    if (value) await copy(value, "pass");
+  };
+
+  const openFB = () => {
+    Linking.openURL("fb://profile/" + entry.uid).catch(() =>
+      Linking.openURL("https://www.facebook.com/" + encodeURIComponent(entry.uid))
+    );
   };
 
   const displayName = decodeProfileName(entry.name || entry.uid);
-  const initials = displayName.slice(0, 2).toUpperCase();
-  const compact = prefs.viewMode === "compact";
+  const initials = entry.name
+    ? decodeProfileName(entry.name)
+        .split(" ")
+        .filter(Boolean)
+        .map((part) => part[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
+    : entry.uid.slice(0, 2);
+
+  const statusText = fetching ? "Wait" : entry.status === "success" ? "OK" : entry.status === "error" ? "Err" : "Wait";
+  const statusColor = entry.status === "success" ? theme.success : entry.status === "error" ? theme.error : theme.muted;
 
   return (
     <View style={styles.swipeWrap}>
       {prefs.swipeToDelete ? (
-        <View style={[styles.deleteBehind, { backgroundColor: theme.error + "22" }]}>
-          <Text style={{ color: theme.error, fontWeight: "800" }}>DELETE</Text>
+        <View style={[styles.deleteBehind, { backgroundColor: theme.error + "24" }]}>
+          <Text style={{ color: theme.error, fontSize: 18 }}>⌫</Text>
         </View>
       ) : null}
+
       <Animated.View
         {...pan.panHandlers}
         style={[
@@ -147,140 +155,146 @@ export function UIDCard({
           }
         ]}
       >
-        <View style={styles.topRow}>
+        <View style={styles.body}>
           {onSelect ? (
-            <Pressable
-              onPress={() => onSelect(entry.id)}
-              style={[
-                styles.check,
-                { borderColor: selected ? theme.primary : theme.border, backgroundColor: selected ? theme.primary : "transparent" }
-              ]}
-            >
-              <Text style={{ color: "#fff", fontWeight: "800", fontSize: 11 }}>{selected ? "✓" : ""}</Text>
-            </Pressable>
+            <View style={styles.checkColumn}>
+              <Pressable
+                onPress={() => onSelect(entry.id)}
+                style={[
+                  styles.check,
+                  {
+                    borderColor: selected ? theme.primary : theme.border,
+                    backgroundColor: selected ? theme.primary : "transparent"
+                  }
+                ]}
+              >
+                <Text style={{ color: "#fff", fontWeight: "900", fontSize: 10 }}>{selected ? "✓" : ""}</Text>
+              </Pressable>
+            </View>
           ) : null}
 
           {entry.profilePic ? (
-            <Image
-              source={{ uri: entry.profilePic }}
-              style={[
-                styles.avatar,
-                compact && styles.avatarCompact,
-                { borderColor: theme.border }
-              ]}
-            />
+            <Image source={{ uri: entry.profilePic }} style={[styles.avatar, { borderColor: theme.border }]} />
           ) : (
-            <View
-              style={[
-                styles.avatar,
-                compact && styles.avatarCompact,
-                styles.avatarFallback,
-                { borderColor: theme.border, backgroundColor: theme.input }
-              ]}
-            >
-              <Text style={{ color: theme.muted, fontWeight: "800" }}>{initials}</Text>
+            <View style={[styles.avatar, styles.avatarFallback, { borderColor: theme.border, backgroundColor: theme.bg }]}>
+              <Text style={{ color: theme.muted, fontFamily: "monospace", fontWeight: "800", fontSize: 12 }}>{initials}</Text>
             </View>
           )}
 
           <View style={styles.info}>
             <View style={styles.nameRow}>
-              <Text numberOfLines={1} style={[styles.name, { color: theme.text }]}>
-                {displayName}
-              </Text>
-              <Pressable onPress={() => onSaved(entry.id)} hitSlop={8}>
-                <Text style={{ color: entry.saved ? theme.warning : theme.muted, fontSize: 20 }}>
-                  {entry.saved ? "★" : "☆"}
-                </Text>
-              </Pressable>
-            </View>
+              <View style={styles.nameLeft}>
+                <Text numberOfLines={1} style={[styles.name, { color: theme.text }]}>{displayName}</Text>
+                {entry.hasInstagram && entry.username ? (
+                  <Pressable onPress={() => Linking.openURL("https://www.instagram.com/" + entry.username + "/")}>
+                    <Text style={{ color: "#d946ef", fontSize: 16, lineHeight: 17 }}>◎</Text>
+                  </Pressable>
+                ) : null}
+              </View>
 
-            <View style={styles.metaRow}>
-              <Text
-                style={[
-                  styles.badge,
-                  {
-                    color:
-                      entry.status === "success"
-                        ? theme.success
-                        : entry.status === "error"
-                          ? theme.error
-                          : theme.muted,
-                    borderColor:
-                      entry.status === "success"
-                        ? theme.success + "44"
-                        : entry.status === "error"
-                          ? theme.error + "44"
-                          : theme.border
-                  }
-                ]}
-              >
-                {fetching ? "FETCHING" : entry.status === "success" ? "OK" : entry.status === "error" ? "ERR" : "WAIT"}
-              </Text>
-              {entry.username ? (
-                <Pressable onPress={() => copy(entry.username || "")}>
-                  <Text numberOfLines={1} style={{ color: theme.secondary, fontSize: 12 }}>
-                    {"@" + entry.username}
+              <View style={styles.topActions}>
+                <Pressable onPress={() => onSaved(entry.id)} hitSlop={8}>
+                  <Text style={{ color: entry.saved ? theme.warning : theme.muted, fontSize: 20, lineHeight: 21 }}>
+                    {entry.saved ? "★" : "☆"}
                   </Text>
                 </Pressable>
-              ) : null}
-              {entry.followerCount !== undefined ? (
-                <Text style={{ color: theme.muted, fontSize: 11 }}>
-                  {formatCount(entry.followerCount) + " followers"}
-                </Text>
+
+                <View style={[styles.status, { borderColor: statusColor + "38", backgroundColor: statusColor + "14" }]}>
+                  <View style={[styles.dot, { backgroundColor: statusColor }]} />
+                  <Text style={{ color: statusColor, fontSize: 9, fontWeight: "700" }}>{statusText}</Text>
+                </View>
+
+                <Pressable onPress={() => setMenuOpen((value) => !value)} hitSlop={8}>
+                  <Text style={{ color: theme.muted, fontSize: 21, lineHeight: 21 }}>⋮</Text>
+                </Pressable>
+              </View>
+
+              {menuOpen ? (
+                <View style={[styles.cardMenu, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                  <Pressable
+                    disabled={fetching}
+                    onPress={() => {
+                      setMenuOpen(false);
+                      onFetch(entry);
+                    }}
+                    style={styles.cardMenuRow}
+                  >
+                    <Text style={{ color: theme.text, fontSize: 12 }}>{fetching ? "↻  Fetching…" : "↻  Fetch"}</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => {
+                      setMenuOpen(false);
+                      openFB();
+                    }}
+                    style={styles.cardMenuRow}
+                  >
+                    <Text style={{ color: theme.text, fontSize: 12 }}>↗  Open FB Profile</Text>
+                  </Pressable>
+                  <View style={[styles.cardMenuDivider, { backgroundColor: theme.border }]} />
+                  <Pressable
+                    onPress={() => {
+                      setMenuOpen(false);
+                      onDelete(entry.id);
+                    }}
+                    style={styles.cardMenuRow}
+                  >
+                    <Text style={{ color: theme.error, fontSize: 12 }}>⌫  Delete</Text>
+                  </Pressable>
+                </View>
               ) : null}
             </View>
+
+            {(entry.username || entry.followerCount !== undefined) ? (
+              <View style={styles.metaRow}>
+                {entry.username ? (
+                  <Pressable onPress={() => copy(entry.username || "", "user")} style={styles.usernameRow}>
+                    <Text numberOfLines={1} style={{ color: theme.muted, fontSize: 11, maxWidth: 115 }}>
+                      {"@" + entry.username}
+                    </Text>
+                    <Text style={{ color: copied === "user" ? theme.success : theme.muted, fontSize: 10 }}>
+                      {copied === "user" ? "✓" : "⧉"}
+                    </Text>
+                  </Pressable>
+                ) : null}
+                {entry.username && entry.followerCount !== undefined ? (
+                  <Text style={{ color: theme.muted, fontSize: 10 }}>•</Text>
+                ) : null}
+                {entry.followerCount !== undefined ? (
+                  <Text style={{ color: theme.muted, fontSize: 11 }}>{entry.followerCount.toLocaleString()} followers</Text>
+                ) : null}
+              </View>
+            ) : null}
 
             <View style={[styles.divider, { backgroundColor: theme.border }]} />
 
             <View style={styles.valueRow}>
               <Text style={[styles.label, { color: theme.muted }]}>UID</Text>
-              <Pressable style={styles.valuePress} onPress={() => copy(entry.uid)}>
-                <Text numberOfLines={1} style={[styles.value, { color: theme.text }]}>
-                  {entry.uid}
-                </Text>
+              <Pressable style={styles.valuePress} onPress={() => copy(entry.uid, "uid")}>
+                <Text numberOfLines={1} style={[styles.value, { color: theme.text }]}>{entry.uid}</Text>
               </Pressable>
-              <Pressable onPress={() => copy(entry.uid)} hitSlop={8}>
-                <Text style={{ color: theme.primary, fontWeight: "700" }}>COPY</Text>
+              <Pressable onPress={() => copy(entry.uid, "uid")} hitSlop={8} style={styles.copyButton}>
+                <Text style={{ color: copied === "uid" ? theme.success : theme.muted, fontSize: 19 }}>
+                  {copied === "uid" ? "✓" : "⧉"}
+                </Text>
               </Pressable>
             </View>
 
             {entry.hasPassword ? (
               <View style={styles.valueRow}>
-                <Text style={[styles.label, { color: theme.muted }]}>PASS</Text>
+                <Text style={[styles.label, { color: theme.muted }]}>Pass</Text>
                 <Pressable style={styles.valuePress} onPress={copyPass}>
                   <Text numberOfLines={1} style={[styles.value, { color: theme.text }]}>
                     {showPassword ? password || "Loading…" : "••••••••"}
                   </Text>
                 </Pressable>
-                <Pressable onPress={copyPass} hitSlop={8}>
-                  <Text style={{ color: theme.primary, fontWeight: "700" }}>COPY</Text>
+                <Pressable onPress={copyPass} hitSlop={8} style={styles.copyButton}>
+                  <Text style={{ color: copied === "pass" ? theme.success : theme.muted, fontSize: 19 }}>
+                    {copied === "pass" ? "✓" : "⧉"}
+                  </Text>
                 </Pressable>
               </View>
             ) : null}
           </View>
-        </View>
-
-        <View style={[styles.actions, { borderTopColor: theme.border }]}>
-          <Pressable style={styles.action} onPress={() => onFetch(entry)}>
-            <Text style={{ color: theme.primary, fontWeight: "700" }}>{fetching ? "Fetching…" : "↻ Fetch"}</Text>
-          </Pressable>
-          <Pressable
-            style={styles.action}
-            onPress={() => Linking.openURL("https://www.facebook.com/" + encodeURIComponent(entry.uid))}
-          >
-            <Text style={{ color: theme.secondary, fontWeight: "700" }}>Facebook</Text>
-          </Pressable>
-          {entry.username && entry.hasInstagram ? (
-            <Pressable
-              style={styles.action}
-              onPress={() => Linking.openURL("https://www.instagram.com/" + entry.username + "/")}
-            >
-              <Text style={{ color: "#d946ef", fontWeight: "700" }}>Instagram</Text>
-            </Pressable>
-          ) : null}
-          <Pressable style={styles.action} onPress={() => onDelete(entry.id)}>
-            <Text style={{ color: theme.error, fontWeight: "700" }}>Delete</Text>
-          </Pressable>
         </View>
       </Animated.View>
     </View>
@@ -288,64 +302,62 @@ export function UIDCard({
 }
 
 const styles = StyleSheet.create({
-  swipeWrap: { marginBottom: 9, position: "relative" },
+  swipeWrap: { marginBottom: 8, position: "relative" },
   deleteBehind: {
     position: "absolute",
     left: 0,
     right: 0,
     top: 0,
     bottom: 0,
-    borderRadius: 14,
+    borderRadius: 12,
     alignItems: "flex-end",
     justifyContent: "center",
-    paddingRight: 20
+    paddingRight: 18
   },
   card: {
     borderWidth: 1,
-    borderRadius: 14,
-    overflow: "hidden"
-  },
-  topRow: { flexDirection: "row", padding: 12, gap: 10, alignItems: "flex-start" },
-  check: {
-    width: 19,
-    height: 19,
-    borderWidth: 1.5,
-    borderRadius: 5,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 22
-  },
-  avatar: {
-    width: 68,
-    height: 68,
     borderRadius: 12,
-    borderWidth: 2
+    position: "relative",
+    elevation: 1
   },
-  avatarCompact: { width: 54, height: 54 },
+  body: { flexDirection: "row", gap: 12, padding: 12, alignItems: "flex-start" },
+  checkColumn: { height: 72, justifyContent: "center" },
+  check: {
+    width: 17,
+    height: 17,
+    borderWidth: 1.3,
+    borderRadius: 4,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  avatar: { width: 72, height: 72, borderRadius: 12, borderWidth: 2 },
   avatarFallback: { alignItems: "center", justifyContent: "center" },
-  info: { flex: 1, minWidth: 0 },
-  nameRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  name: { flex: 1, fontSize: 14, fontWeight: "800" },
-  metaRow: { flexDirection: "row", alignItems: "center", gap: 7, marginTop: 4, flexWrap: "wrap" },
-  badge: {
+  info: { flex: 1, minWidth: 0, gap: 4 },
+  nameRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 8, position: "relative" },
+  nameLeft: { flex: 1, minWidth: 0, flexDirection: "row", alignItems: "center", gap: 6 },
+  name: { flex: 1, fontSize: 14, fontWeight: "800", lineHeight: 17 },
+  topActions: { flexDirection: "row", alignItems: "center", gap: 5, flexShrink: 0 },
+  status: { minHeight: 20, borderWidth: 1, borderRadius: 5, paddingHorizontal: 6, flexDirection: "row", alignItems: "center", gap: 4 },
+  dot: { width: 6, height: 6, borderRadius: 3 },
+  cardMenu: {
+    position: "absolute",
+    right: 0,
+    top: 26,
+    width: 150,
     borderWidth: 1,
-    borderRadius: 5,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    fontSize: 9,
-    fontWeight: "800"
+    borderRadius: 9,
+    paddingVertical: 4,
+    zIndex: 100,
+    elevation: 20
   },
-  divider: { height: StyleSheet.hairlineWidth, marginVertical: 6 },
-  valueRow: { flexDirection: "row", alignItems: "center", gap: 7, minHeight: 24 },
-  label: { width: 34, fontSize: 10, fontWeight: "700" },
-  valuePress: { flex: 1 },
+  cardMenuRow: { minHeight: 36, paddingHorizontal: 12, justifyContent: "center" },
+  cardMenuDivider: { height: StyleSheet.hairlineWidth, marginVertical: 3 },
+  metaRow: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 16 },
+  usernameRow: { flexDirection: "row", alignItems: "center", gap: 4 },
+  divider: { height: StyleSheet.hairlineWidth, marginTop: 2 },
+  valueRow: { minHeight: 27, flexDirection: "row", alignItems: "center", gap: 6 },
+  label: { width: 28, fontSize: 10, fontFamily: "monospace" },
+  valuePress: { flex: 1, minWidth: 0 },
   value: { fontSize: 12, fontFamily: "monospace" },
-  actions: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    paddingHorizontal: 8,
-    paddingVertical: 5
-  },
-  action: { paddingHorizontal: 8, paddingVertical: 7 }
+  copyButton: { width: 28, height: 27, alignItems: "center", justifyContent: "center" }
 });
