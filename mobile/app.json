@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "UIDZone",
+    "slug": "uidzone-native",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "scheme": "uidzone",
+    "plugins": [
+      [
+        "expo-secure-store",
+        {
+          "configureAndroidBackup": true
+        }
+      ]
+    ],
+    "android": {
+      "package": "com.parvezdevs.uidzone",
+      "versionCode": 1,
+      "permissions": [
+        "INTERNET",
+        "VIBRATE"
+      ],
+      "adaptiveIcon": {
+        "backgroundColor": "#080d14"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.parvezdevs.uidzone",
+      "supportsTablet": false,
+      "config": {
+        "usesNonExemptEncryption": false
+      }
+    }
+  }
+}
