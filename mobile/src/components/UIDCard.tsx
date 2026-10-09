@@ -446,7 +446,11 @@ function SheetAction({
 const styles = StyleSheet.create({
   wrap: { marginBottom: 9, position: "relative" },
   deleteRail: {
-    ...StyleSheet.absoluteFillObject,
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
     borderRadius: 16,
     alignItems: "flex-end",
     justifyContent: "center",
