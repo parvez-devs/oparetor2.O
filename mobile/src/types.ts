@@ -1,4 +1,7 @@
 export type UIDStatus = "pending" | "success" | "error";
+export type ThemeMode = "dark" | "amoled" | "light" | "system";
+export type SyncStatus = "synced" | "syncing" | "offline" | "conflict" | "error";
+export type SortMode = "newest" | "name" | "status";
 
 export interface UIDEntry {
   id: string;
@@ -13,14 +16,26 @@ export interface UIDEntry {
   saved?: boolean;
   reInput?: boolean;
   hasPassword?: boolean;
+  collection?: string;
+  tags?: string[];
+  updatedAt?: string;
 }
 
 export interface Preferences {
-  theme: "dark" | "light";
+  theme: ThemeMode;
   fontSize: "sm" | "md" | "lg";
   viewMode: "full" | "compact";
   swipeToDelete: boolean;
   autoRetry: boolean;
+  haptics: boolean;
+  reduceMotion: boolean;
+}
+
+export interface VaultConfig {
+  enabled: boolean;
+  biometric: boolean;
+  requireForPassword: boolean;
+  blockScreenshots: boolean;
 }
 
 export interface User {
@@ -55,9 +70,18 @@ export interface CloudUIDRow {
 }
 
 export const DEFAULT_PREFS: Preferences = {
-  theme: "dark",
+  theme: "amoled",
   fontSize: "md",
   viewMode: "compact",
-  swipeToDelete: false,
-  autoRetry: false
+  swipeToDelete: true,
+  autoRetry: false,
+  haptics: true,
+  reduceMotion: false
+};
+
+export const DEFAULT_VAULT: VaultConfig = {
+  enabled: false,
+  biometric: false,
+  requireForPassword: false,
+  blockScreenshots: false
 };

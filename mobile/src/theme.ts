@@ -1,41 +1,67 @@
+import type { ColorSchemeName } from "react-native";
 import type { Preferences } from "./types";
 
 export const themes = {
   dark: {
-    bg: "#080d14",
-    card: "#0e1623",
-    card2: "#1a2540",
-    border: "#1a2540",
-    primary: "#3b9dff",
-    primaryDim: "#1a4a80",
-    success: "#22c55e",
-    error: "#ef4444",
-    warning: "#f59e0b",
-    text: "#e8f0fe",
-    secondary: "#8899bb",
-    muted: "#4a5878",
-    input: "#080d14"
+    bg: "#070c13",
+    card: "#0d1622",
+    card2: "#121e2d",
+    border: "#1d2d43",
+    edge: "#214d70",
+    primary: "#46a7ff",
+    cyan: "#36e0ff",
+    primaryDim: "#123b61",
+    success: "#31d17c",
+    error: "#ff5e6c",
+    warning: "#ffb84a",
+    text: "#edf7ff",
+    secondary: "#93a8c4",
+    muted: "#60738e",
+    input: "#09111b",
+    overlay: "rgba(3,8,14,0.78)"
+  },
+  amoled: {
+    bg: "#000000",
+    card: "#060a0f",
+    card2: "#0a1119",
+    border: "#15243a",
+    edge: "#0f527a",
+    primary: "#39a7ff",
+    cyan: "#21e6ff",
+    primaryDim: "#0a3454",
+    success: "#2ed57c",
+    error: "#ff5667",
+    warning: "#ffb54a",
+    text: "#f3fbff",
+    secondary: "#91a6c0",
+    muted: "#526681",
+    input: "#03070b",
+    overlay: "rgba(0,0,0,0.84)"
   },
   light: {
-    bg: "#f0f4ff",
+    bg: "#eff5ff",
     card: "#ffffff",
-    card2: "#dde5f5",
-    border: "#dde5f5",
-    primary: "#3b9dff",
-    primaryDim: "#1a4a80",
-    success: "#22c55e",
-    error: "#ef4444",
-    warning: "#f59e0b",
-    text: "#0d1b3e",
-    secondary: "#4a5878",
-    muted: "#4a5878",
-    input: "#f0f4ff"
+    card2: "#f7faff",
+    border: "#dbe6f5",
+    edge: "#bfdcff",
+    primary: "#168cff",
+    cyan: "#00bde8",
+    primaryDim: "#d7ebff",
+    success: "#16a766",
+    error: "#dc4254",
+    warning: "#d98600",
+    text: "#0b1a33",
+    secondary: "#435776",
+    muted: "#70819d",
+    input: "#ffffff",
+    overlay: "rgba(11,26,51,0.35)"
   }
 };
 
 export type Theme = typeof themes.dark;
 
-export function getTheme(prefs: Preferences): Theme {
+export function getTheme(prefs: Preferences, system: ColorSchemeName = "dark"): Theme {
+  if (prefs.theme === "system") return system === "light" ? themes.light : themes.dark;
   return themes[prefs.theme];
 }
 

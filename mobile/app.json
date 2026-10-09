@@ -2,37 +2,35 @@
   "expo": {
     "name": "UID 2.O",
     "slug": "uid-2o-native",
-    "version": "2.1.0",
+    "version": "3.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "scheme": "uidzone",
     "plugins": [
-      [
-        "expo-secure-store",
-        {
-          "configureAndroidBackup": true
-        }
-      ]
+      ["expo-secure-store", { "configureAndroidBackup": true }],
+      "expo-local-authentication",
+      "expo-screen-capture"
     ],
     "android": {
       "package": "com.parvezdevs.uidzone",
-      "versionCode": 3,
-      "permissions": [
-        "INTERNET",
-        "VIBRATE"
-      ],
+      "versionCode": 4,
+      "permissions": ["INTERNET", "VIBRATE", "USE_BIOMETRIC"],
       "adaptiveIcon": {
-        "backgroundColor": "#081426",
-        "foregroundImage": "./assets/adaptive-icon.png"
+        "backgroundColor": "#000000",
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "monochromeImage": "./assets/monochrome-icon.png"
       }
     },
     "ios": {
       "bundleIdentifier": "com.parvezdevs.uidzone",
       "supportsTablet": false,
-      "config": {
-        "usesNonExemptEncryption": false
-      }
+      "config": { "usesNonExemptEncryption": false }
     },
-    "icon": "./assets/icon.png"
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    }
   }
 }
