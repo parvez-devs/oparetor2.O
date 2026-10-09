@@ -43,7 +43,9 @@ function toCloud(entry: UIDEntry, userId: string): Omit<CloudUIDRow, "created_at
     status: entry.status,
     fetched_at: entry.fetchedAt || null,
     saved: Boolean(entry.saved),
-    re_input: Boolean(entry.reInput)
+    re_input: Boolean(entry.reInput),
+    collection: entry.collection || null,
+    tags: entry.tags || []
   };
 }
 
