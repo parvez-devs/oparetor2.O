@@ -1,4 +1,4 @@
-"""Generate UID 2.O launcher icons without external image dependencies."""
+"""Generate UID 2.O Cyber Minimal launcher icons without external image dependencies."""
 from pathlib import Path
 import math
 import struct
@@ -7,44 +7,62 @@ import zlib
 ROOT = Path(__file__).resolve().parents[1] / "assets"
 ROOT.mkdir(parents=True, exist_ok=True)
 SIZE = 512
+
 GLYPHS = {
     "U": ["10001","10001","10001","10001","10001","10001","01110"],
     "2": ["01110","10001","00001","00010","00100","01000","11111"],
-    "O": ["01110","10001","10001","10001","10001","10001","01110"],
 }
-def glyph_mask(x,y,char,x0,y0,scale):
-    glyph=GLYPHS[char]
-    gx=int((x-x0)/scale); gy=int((y-y0)/scale)
-    return 0<=gx<5 and 0<=gy<7 and glyph[gy][gx]=="1"
 
-def render(foreground):
-    pixels=bytearray()
+def glyph_mask(x, y, char, x0, y0, scale):
+    glyph = GLYPHS[char]
+    gx = int((x - x0) / scale)
+    gy = int((y - y0) / scale)
+    return 0 <= gx < 5 and 0 <= gy < 7 and glyph[gy][gx] == "1"
+
+def png_bytes(mode):
+    pixels = bytearray()
     for y in range(SIZE):
-        row=bytearray()
+        row = bytearray()
         for x in range(SIZE):
-            d=math.hypot(x-256,y-256)
-            if foreground:
-                color=(0,0,0,0)
-            else:
-                t=y/511
-                color=(int(9+5*t),int(20+12*t),int(39+24*t),255)
-                if d<205:
-                    color=(12,38,75,255)
-                if 192<d<199:
-                    color=(37,131,246,255)
-            # Pixel letter mark "U2O" centered in a circular emblem
-            on=(glyph_mask(x,y,"U",112,194,15) or
-                glyph_mask(x,y,"2",222,194,15) or
-                glyph_mask(x,y,"O",332,194,15))
-            if on:
-                color=(237,247,255,255) if x<222 else (60,170,255,255)
-            row.extend(color)
-        pixels.extend(bytes([0])+row)
-    def chunk(tag,data):
-        return struct.pack(">I",len(data))+tag+data+struct.pack(">I",zlib.crc32(tag+data)&0xffffffff)
-    header=struct.pack(">IIBBBBB",SIZE,SIZE,8,6,0,0,0)
-    return bytes([137,80,78,71,13,10,26,10])+chunk(b"IHDR",header)+chunk(b"IDAT",zlib.compress(bytes(pixels),6))+chunk(b"IEND",b"")
+            dx, dy = x - 256, y - 256
+            d = math.hypot(dx, dy)
+            angle = math.atan2(dy, dx)
 
-(ROOT/"icon.png").write_bytes(render(False))
-(ROOT/"adaptive-icon.png").write_bytes(render(True))
-print("Generated UID 2.O Android launcher icons")
+            if mode in ("foreground", "mono"):
+                color = (0, 0, 0, 0)
+            else:
+                color = (0, 0, 0, 255)
+                if d < 216:
+                    glow = max(0.0, 1.0 - d / 216.0)
+                    color = (int(2 + 5 * glow), int(8 + 18 * glow), int(14 + 30 * glow), 255)
+
+            ring = 178 < d < 186 and not (-0.5 < angle < 0.25)
+            arc = 188 < d < 198 and (1.0 < angle < 2.55)
+            u = glyph_mask(x, y, "U", 147, 193, 17)
+            two = glyph_mask(x, y, "2", 280, 193, 17)
+            slash = 238 < x < 250 and 180 < y < 330 and abs((y - 255) + 2.1 * (x - 244)) < 15
+            mark = ring or arc or u or two or slash
+
+            if mark:
+                if mode == "mono":
+                    color = (255, 255, 255, 255)
+                else:
+                    t = min(1.0, max(0.0, x / 511.0))
+                    color = (int(42 - 6*t), int(158 + 70*t), 255, 255)
+
+            if mode == "normal" and 205 < d < 211:
+                color = (10, 54, 82, 255)
+
+            row.extend(color)
+        pixels.extend(bytes([0]) + row)
+
+    def chunk(tag, data):
+        return struct.pack(">I", len(data)) + tag + data + struct.pack(">I", zlib.crc32(tag + data) & 0xffffffff)
+
+    header = struct.pack(">IIBBBBB", SIZE, SIZE, 8, 6, 0, 0, 0)
+    return bytes([137,80,78,71,13,10,26,10]) + chunk(b"IHDR", header) + chunk(b"IDAT", zlib.compress(bytes(pixels), 6)) + chunk(b"IEND", b"")
+
+(ROOT / "icon.png").write_bytes(png_bytes("normal"))
+(ROOT / "adaptive-icon.png").write_bytes(png_bytes("foreground"))
+(ROOT / "monochrome-icon.png").write_bytes(png_bytes("mono"))
+print("Generated UID 2.O Cyber Minimal Android launcher icons")
