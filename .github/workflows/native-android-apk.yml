@@ -69,22 +69,25 @@ jobs:
           npx expo prebuild --platform android --clean
           cp /tmp/android-local.properties android/local.properties
 
-      - name: Build installable APK
+      - name: Build standalone APK with embedded JavaScript
+        env:
+          CI: "1"
+          NODE_ENV: production
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew :app:assembleDebug --no-daemon --stacktrace
+          ./gradlew :app:assembleRelease --no-daemon --stacktrace
 
       - name: Stage APK
         run: |
           mkdir -p dist
-          cp android/app/build/outputs/apk/debug/app-debug.apk dist/UIDZone-Native.apk
+          cp android/app/build/outputs/apk/release/app-release.apk dist/UIDZone-Native.apk
           ls -lh dist/UIDZone-Native.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: UIDZone-Native-APK
+          name: UIDZone-Standalone-APK
           path: mobile/dist/UIDZone-Native.apk
           if-no-files-found: error
           retention-days: 30
