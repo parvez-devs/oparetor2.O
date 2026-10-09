@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - native-apk
+      - native-standalone-fix
     paths:
       - "mobile/**"
       - ".github/workflows/native-android-apk.yml"
@@ -69,22 +70,43 @@ jobs:
           npx expo prebuild --platform android --clean
           cp /tmp/android-local.properties android/local.properties
 
-      - name: Build installable APK
+      - name: Build standalone release APK
+        env:
+          NODE_ENV: production
+          CI: "1"
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew :app:assembleDebug --no-daemon --stacktrace
+          ./gradlew :app:assembleRelease --no-daemon --stacktrace
 
-      - name: Stage APK
+      - name: Stage and verify standalone APK
+        shell: bash
         run: |
+          set -euo pipefail
           mkdir -p dist
-          cp android/app/build/outputs/apk/debug/app-debug.apk dist/UIDZone-Native.apk
-          ls -lh dist/UIDZone-Native.apk
+          APK="$(find android/app/build/outputs/apk/release -maxdepth 1 -type f -name '*.apk' | head -n 1)"
+          if [ -z "$APK" ]; then
+            echo "Release APK not found" >&2
+            exit 1
+          fi
+          cp "$APK" dist/UIDZone-Native-Standalone.apk
+
+          if ! unzip -l dist/UIDZone-Native-Standalone.apk | grep -q 'assets/index.android.bundle'; then
+            echo "Standalone JS bundle is missing from APK" >&2
+            exit 1
+          fi
+
+          APKSIGNER="${ANDROID_HOME}/build-tools/36.0.0/apksigner"
+          if [ -x "$APKSIGNER" ]; then
+            "$APKSIGNER" verify --verbose dist/UIDZone-Native-Standalone.apk
+          fi
+
+          ls -lh dist/UIDZone-Native-Standalone.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: UIDZone-Native-APK
-          path: mobile/dist/UIDZone-Native.apk
+          name: UIDZone-Native-Standalone-APK
+          path: mobile/dist/UIDZone-Native-Standalone.apk
           if-no-files-found: error
           retention-days: 30
