@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "UIDZone",
-    "slug": "uidzone-native",
+    "name": "UID 2.O",
+    "slug": "uid-2o-native",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
@@ -16,13 +16,14 @@
     ],
     "android": {
       "package": "com.parvezdevs.uidzone",
-      "versionCode": 1,
+      "versionCode": 2,
       "permissions": [
         "INTERNET",
         "VIBRATE"
       ],
       "adaptiveIcon": {
-        "backgroundColor": "#080d14"
+        "backgroundColor": "#081426",
+        "foregroundImage": "./assets/adaptive-icon.png"
       }
     },
     "ios": {
@@ -31,6 +32,7 @@
       "config": {
         "usesNonExemptEncryption": false
       }
-    }
+    },
+    "icon": "./assets/icon.png"
   }
 }
