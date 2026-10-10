@@ -1,6 +1,6 @@
 import { SUPABASE_KEY, SUPABASE_URL } from "./config";
 import { refreshSession, saveSession } from "./auth";
-import type { CloudUIDRow, Preferences, Session, UIDEntry } from "./types";
+import { DEFAULT_PREFS, type CloudUIDRow, type Preferences, type Session, type UIDEntry } from "./types";
 
 async function authedFetch(
   sessionRef: { current: Session | null },
@@ -43,7 +43,9 @@ function toCloud(entry: UIDEntry, userId: string): Omit<CloudUIDRow, "created_at
     status: entry.status,
     fetched_at: entry.fetchedAt || null,
     saved: Boolean(entry.saved),
-    re_input: Boolean(entry.reInput)
+    re_input: Boolean(entry.reInput),
+    collection: entry.collection || null,
+    tags: entry.tags || []
   };
 }
 
@@ -106,15 +108,20 @@ export async function pullPrefs(sessionRef: { current: Session | null }): Promis
     view_mode: Preferences["viewMode"];
     swipe_to_delete: boolean;
     auto_retry: boolean;
+    haptics: boolean;
+    reduce_motion: boolean;
   }>;
   const row = rows[0];
   if (!row) return null;
   return {
+    ...DEFAULT_PREFS,
     theme: row.theme,
     fontSize: row.font_size,
     viewMode: row.view_mode,
     swipeToDelete: row.swipe_to_delete,
-    autoRetry: row.auto_retry
+    autoRetry: row.auto_retry,
+    haptics: row.haptics,
+    reduceMotion: row.reduce_motion
   };
 }
 
@@ -136,7 +143,9 @@ export async function upsertPrefs(
         font_size: prefs.fontSize,
         view_mode: prefs.viewMode,
         swipe_to_delete: prefs.swipeToDelete,
-        auto_retry: prefs.autoRetry
+        auto_retry: prefs.autoRetry,
+        haptics: prefs.haptics,
+        reduce_motion: prefs.reduceMotion
       })
     }
   );

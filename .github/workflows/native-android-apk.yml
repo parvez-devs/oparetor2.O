@@ -7,9 +7,14 @@ on:
       - main
       - native-apk
       - native-standalone-fix
+      - v3-cyber-minimal
     paths:
       - "mobile/**"
       - ".github/workflows/native-android-apk.yml"
+
+concurrency:
+  group: native-apk-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -17,7 +22,7 @@ permissions:
 jobs:
   build-apk:
     runs-on: ubuntu-24.04
-    timeout-minutes: 55
+    timeout-minutes: 60
     defaults:
       run:
         working-directory: mobile
@@ -51,8 +56,11 @@ jobs:
           "$SDKMANAGER" "platform-tools" "platforms;android-36" "build-tools;36.0.0"
           echo "sdk.dir=${ANDROID_HOME}" > /tmp/android-local.properties
 
-      - name: Install dependencies
+      - name: Install base dependencies
         run: npm install --no-audit --no-fund
+
+      - name: Install v3 native modules
+        run: npm run v3:deps
 
       - name: Align Expo dependencies
         run: npx expo install --fix
@@ -92,25 +100,25 @@ jobs:
             echo "Release APK not found" >&2
             exit 1
           fi
-          cp "$APK" "dist/UID-2.O-v2.1.0.apk"
+          cp "$APK" "dist/UID-2.O-v3.0.0.apk"
 
-          if ! unzip -l "dist/UID-2.O-v2.1.0.apk" | grep -q 'assets/index.android.bundle'; then
+          if ! unzip -l "dist/UID-2.O-v3.0.0.apk" | grep -q 'assets/index.android.bundle'; then
             echo "Standalone JS bundle is missing from APK" >&2
             exit 1
           fi
 
           APKSIGNER="${ANDROID_HOME}/build-tools/36.0.0/apksigner"
           if [ -x "$APKSIGNER" ]; then
-            "$APKSIGNER" verify --verbose "dist/UID-2.O-v2.1.0.apk"
+            "$APKSIGNER" verify --verbose "dist/UID-2.O-v3.0.0.apk"
           fi
 
-          ls -lh "dist/UID-2.O-v2.1.0.apk"
+          ls -lh "dist/UID-2.O-v3.0.0.apk"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: UID-2.O-v2.1.0
-          path: mobile/dist/UID-2.O-v2.1.0.apk
+          name: UID-2.O-v3.0.0
+          path: mobile/dist/UID-2.O-v3.0.0.apk
           if-no-files-found: error
           retention-days: 30
 
@@ -120,32 +128,41 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          TAG="v2.1.0"
-          APK="dist/UID-2.O-v2.1.0.apk"
-          NOTES="/tmp/uid2-release-notes.md"
+          TAG="v3.0.0"
+          APK="dist/UID-2.O-v3.0.0.apk"
+          NOTES="/tmp/uid2-v3-release-notes.md"
 
           cat > "$NOTES" <<'EOF'
-          # UID 2.O v2.1.0
+          # UID 2.O v3.0.0 — Cyber Minimal
 
-          Web-panel parity release.
+          Heavy native Android upgrade focused on professional visual identity, performance, security and advanced UID workflows.
 
-          - Native Home layout rebuilt to match the web panel
-          - Same stats bar, password toggle, retry action and 3-dot batch menu
-          - UID cards now match the web card hierarchy: checkbox, 72px avatar, name, Instagram indicator, star, status, 3-dot menu, username/followers, UID/password rows
-          - Removed the extra native-only bottom action row from UID cards
-          - Saved screen now matches web title/count/password toggle/search/empty state
-          - Import screen now matches web title, format card, textarea, progress and import controls
-          - Settings now mirrors the web Theme, Font Size, View Mode, Preferences and Storage sections
-          - Auth spacing and controls aligned with the web panel while keeping the UID 2.O product name
-          - Dark/light colors aligned with the web CSS variables
-          - Standalone JavaScript bundle embedded; Metro is not required
-          - Supabase auth/cloud sync and existing UID API remain connected
+          ## Highlights
 
-          Install the attached `UID-2.O-v2.1.0.apk`.
+          - AMOLED Cyber Minimal visual system with animated aurora depth and cyan edge lighting
+          - Lottie launch reveal and native micro-interactions
+          - Spring swipe gestures, long-press quick actions and haptic feedback
+          - UID Card v2 with cached images, compact/full modes, inline retry, copy feedback and native bottom sheets
+          - Smart Home dashboard with filters, sort modes, debounced command search and bulk toolbar
+          - Command search supports status:error, saved:true, ig:true, pass:true, @username and date:YYYY-MM-DD
+          - Profile Inspector with large avatar preview, secure password reveal, social actions and workspace collection assignment
+          - Secure Vault with PIN, biometrics, background lock and optional screenshot blocking
+          - Encrypted password-protected backup/restore
+          - Offline-aware sync indicator and automatic reconnect sync
+          - Import Pro validation, duplicate warning, password detection and Import Only / Import & Fetch modes
+          - Saved Workspace collections
+          - AMOLED / Dark / Light / System themes
+          - Custom UID 2.O adaptive + monochrome launcher icon
+          - FlashList + expo-image caching for large UID lists
+          - Professional offline/API/cloud error states
+          - GitHub release update checker
+          - API/Supabase diagnostics and safe diagnostic report copy
+
+          Install the attached `UID-2.O-v3.0.0.apk`.
           EOF
 
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release upload "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" --clobber
           else
-            gh release create "$TAG" "$APK"               --repo "$GITHUB_REPOSITORY"               --target "$GITHUB_SHA"               --title "UID 2.O v2.1.0"               --notes-file "$NOTES"
+            gh release create "$TAG" "$APK"               --repo "$GITHUB_REPOSITORY"               --target "$GITHUB_SHA"               --title "UID 2.O v3.0.0 — Cyber Minimal"               --notes-file "$NOTES"
           fi

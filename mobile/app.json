@@ -2,7 +2,7 @@
   "expo": {
     "name": "UID 2.O",
     "slug": "uid-2o-native",
-    "version": "2.1.0",
+    "version": "3.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "scheme": "uidzone",
@@ -12,18 +12,29 @@
         {
           "configureAndroidBackup": true
         }
+      ],
+      "expo-local-authentication",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#000000",
+          "image": "./assets/icon.png",
+          "imageWidth": 180
+        }
       ]
     ],
     "android": {
       "package": "com.parvezdevs.uidzone",
-      "versionCode": 3,
+      "versionCode": 4,
       "permissions": [
         "INTERNET",
-        "VIBRATE"
+        "VIBRATE",
+        "USE_BIOMETRIC"
       ],
       "adaptiveIcon": {
-        "backgroundColor": "#081426",
-        "foregroundImage": "./assets/adaptive-icon.png"
+        "backgroundColor": "#000000",
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "monochromeImage": "./assets/monochrome-icon.png"
       }
     },
     "ios": {
