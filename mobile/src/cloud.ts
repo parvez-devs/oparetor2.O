@@ -103,11 +103,13 @@ export async function pullPrefs(sessionRef: { current: Session | null }): Promis
   );
   if (!res.ok) throw new Error("Preference load failed");
   const rows = (await res.json()) as Array<{
-    theme: "dark" | "light";
+    theme: Preferences["theme"];
     font_size: Preferences["fontSize"];
     view_mode: Preferences["viewMode"];
     swipe_to_delete: boolean;
     auto_retry: boolean;
+    haptics: boolean;
+    reduce_motion: boolean;
   }>;
   const row = rows[0];
   if (!row) return null;
@@ -117,7 +119,9 @@ export async function pullPrefs(sessionRef: { current: Session | null }): Promis
     fontSize: row.font_size,
     viewMode: row.view_mode,
     swipeToDelete: row.swipe_to_delete,
-    autoRetry: row.auto_retry
+    autoRetry: row.auto_retry,
+    haptics: row.haptics,
+    reduceMotion: row.reduce_motion
   };
 }
 
@@ -127,7 +131,6 @@ export async function upsertPrefs(
 ) {
   const session = sessionRef.current;
   if (!session) return;
-  const cloudTheme = prefs.theme === "light" ? "light" : "dark";
   const res = await authedFetch(
     sessionRef,
     "/rest/v1/user_preferences?on_conflict=user_id",
@@ -136,11 +139,13 @@ export async function upsertPrefs(
       headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
       body: JSON.stringify({
         user_id: session.user.id,
-        theme: cloudTheme,
+        theme: prefs.theme,
         font_size: prefs.fontSize,
         view_mode: prefs.viewMode,
         swipe_to_delete: prefs.swipeToDelete,
-        auto_retry: prefs.autoRetry
+        auto_retry: prefs.autoRetry,
+        haptics: prefs.haptics,
+        reduce_motion: prefs.reduceMotion
       })
     }
   );
