@@ -12,7 +12,7 @@ import {
   View
 } from "react-native";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
-import { signIn, signUp } from "../auth";
+import { resendConfirmation, signIn, signUp } from "../auth";
 import type { Session } from "../types";
 
 export function AuthScreen({ onSession }: { onSession: (session: Session) => void }) {
@@ -23,6 +23,8 @@ export function AuthScreen({ onSession }: { onSession: (session: Session) => voi
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [pendingEmail, setPendingEmail] = useState("");
+  const [resending, setResending] = useState(false);
   const phase = useRef(new Animated.Value(0)).current;
   const panel = useRef(new Animated.Value(0)).current;
 
@@ -52,7 +54,8 @@ export function AuthScreen({ onSession }: { onSession: (session: Session) => voi
         const result = await signUp(email, password);
         if (result.session) onSession(result.session);
         else {
-          setMessage("Account created. Check your email, confirm it, then login.");
+          setPendingEmail(email.trim().toLowerCase());
+          setMessage("Confirmation email sent. Tap the email link to return directly to UID 2.O.");
           setMode("login");
         }
       }
@@ -60,6 +63,22 @@ export function AuthScreen({ onSession }: { onSession: (session: Session) => voi
       setError(e instanceof Error ? e.message : "Authentication failed");
     } finally {
       setBusy(false);
+    }
+  };
+
+  const resend = async () => {
+    const target = (pendingEmail || email).trim().toLowerCase();
+    if (!target.includes("@") || resending) return;
+    setResending(true);
+    setError("");
+    try {
+      await resendConfirmation(target);
+      setPendingEmail(target);
+      setMessage("Confirmation email resent. Open the newest email.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not resend confirmation");
+    } finally {
+      setResending(false);
     }
   };
 
@@ -153,6 +172,12 @@ export function AuthScreen({ onSession }: { onSession: (session: Session) => voi
               </View>
             ) : null}
             {message ? <Text style={styles.ok}>{message}</Text> : null}
+            {pendingEmail && mode === "login" ? (
+              <Pressable onPress={resend} disabled={resending} style={styles.resend}>
+                {resending ? <ActivityIndicator color="#36e0ff" size="small" /> : <Feather name="send" size={12} color="#36e0ff" />}
+                <Text style={styles.resendText}>Resend confirmation</Text>
+              </Pressable>
+            ) : null}
 
             <Pressable
               onPress={submit}
@@ -213,6 +238,8 @@ const styles = StyleSheet.create({
   errorBox: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 11, padding: 9, borderRadius: 9, backgroundColor: "#ff5e6c12" },
   error: { color: "#ff5e6c", fontSize: 10, flex: 1 },
   ok: { color: "#31d17c", textAlign: "center", marginTop: 11, fontSize: 10 },
+  resend: { height: 34, marginTop: 8, alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 10 },
+  resendText: { color: "#36e0ff", fontSize: 10, fontWeight: "800" },
   switchRow: { flexDirection: "row", justifyContent: "center", marginTop: 18 },
   switchMuted: { color: "#60738e", fontSize: 11 },
   switchText: { color: "#39a7ff", fontSize: 11, fontWeight: "800" },
