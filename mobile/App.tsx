@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Animated,
   AppState,
+  Linking,
   Platform,
   Pressable,
   StatusBar,
@@ -23,7 +24,7 @@ import { SettingsScreen } from "./src/screens/SettingsScreen";
 import { AnimatedSplash } from "./src/components/AnimatedSplash";
 import { AuroraBackground } from "./src/components/AuroraBackground";
 import { VaultGate } from "./src/components/VaultGate";
-import { restoreSession } from "./src/auth";
+import { restoreSession, sessionFromAuthUrl } from "./src/auth";
 import {
   clearCloudUIDs,
   deleteCloudUID,
@@ -285,6 +286,38 @@ export default function App() {
       setBooting(false);
     }
   };
+
+  useEffect(() => {
+    let active = true;
+
+    const handleUrl = async (url?: string | null) => {
+      if (!active || !url || !url.startsWith("uidzone://auth/callback")) return;
+      try {
+        setBooting(true);
+        const value = await sessionFromAuthUrl(url);
+        if (value && active) {
+          await onAuthenticated(value);
+          setAppError("");
+        }
+      } catch (error) {
+        if (active) {
+          setAppError(error instanceof Error ? error.message : "Email confirmation failed");
+        }
+      } finally {
+        if (active) setBooting(false);
+      }
+    };
+
+    Linking.getInitialURL().then(handleUrl).catch(() => {});
+    const subscription = Linking.addEventListener("url", ({ url }) => {
+      void handleUrl(url);
+    });
+
+    return () => {
+      active = false;
+      subscription.remove();
+    };
+  }, []);
 
   const updatePrefs = async (next: Preferences) => {
     const current = sessionRef.current;
