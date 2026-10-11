@@ -3,6 +3,7 @@ import { SUPABASE_KEY, SUPABASE_URL } from "./config";
 import type { Session } from "./types";
 
 const AUTH_KEY = "uidzone_auth_session";
+export const NATIVE_AUTH_REDIRECT = "uidzone://auth/callback";
 export const AUTH_REDIRECT_URL = "uidzone://auth/callback";
 
 type AuthBody = Partial<Session> & {
@@ -166,6 +167,47 @@ export async function sessionFromAuthUrl(url: string): Promise<Session | null> {
     refresh_token: refreshToken,
     expires_in: Number.isFinite(expiresIn) ? expiresIn : 3600,
     expires_at: Math.floor(Date.now() / 1000) + (Number.isFinite(expiresIn) ? expiresIn : 3600),
+    token_type: params.get("token_type") || "bearer",
+    user
+  };
+  await saveSession(session);
+  return session;
+}
+
+export async function sessionFromAuthUrl(url: string): Promise<Session | null> {
+  if (!url || !url.startsWith("uidzone://auth/callback")) return null;
+
+  const hash = url.includes("#") ? url.split("#")[1] : "";
+  const query = url.includes("?") ? url.split("?")[1].split("#")[0] : "";
+  const params = new URLSearchParams([query, hash].filter(Boolean).join("&"));
+
+  const error = params.get("error_description") || params.get("error");
+  if (error) throw new Error(decodeURIComponent(error));
+
+  const accessToken = params.get("access_token");
+  const refreshToken = params.get("refresh_token");
+  if (!accessToken || !refreshToken) return null;
+
+  const userRes = await fetch(SUPABASE_URL + "/auth/v1/user", {
+    headers: headers({ Authorization: "Bearer " + accessToken })
+  });
+  if (!userRes.ok) throw await parseError(userRes);
+  const user = (await userRes.json()) as Session["user"];
+
+  const expiresInRaw = params.get("expires_in");
+  const expiresAtRaw = params.get("expires_at");
+  const expiresIn = expiresInRaw ? Number(expiresInRaw) : undefined;
+  const expiresAt = expiresAtRaw
+    ? Number(expiresAtRaw)
+    : expiresIn
+      ? Math.floor(Date.now() / 1000) + expiresIn
+      : undefined;
+
+  const session: Session = {
+    access_token: accessToken,
+    refresh_token: refreshToken,
+    expires_in: expiresIn,
+    expires_at: expiresAt,
     token_type: params.get("token_type") || "bearer",
     user
   };
