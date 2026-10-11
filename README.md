@@ -2,7 +2,7 @@
 
 **UID 2.O** is a native Android UID workspace built with React Native / Expo. It is not a WebView wrapper.
 
-The current native generation is **v3.0.0 — Cyber Minimal**.
+The current native release is **v3.0.1 — Cyber Minimal (Email Confirmation Hotfix)**.
 
 ## v3 Cyber Minimal
 
@@ -151,12 +151,12 @@ Diagnostic reports do **not** include UID or password values.
 Once the v3 CI pipeline is green, the release APK is published as:
 
 ```text
-UID-2.O-v3.0.0.apk
+UID-2.O-v3.0.1.apk
 ```
 
 Release page:
 
-https://github.com/parvez-devs/oparetor2.O/releases/tag/v3.0.0
+https://github.com/parvez-devs/oparetor2.O/releases/tag/v3.0.1
 
 ## Web app
 
@@ -227,3 +227,19 @@ com.parvezdevs.uidzone
 - Profile API receives UID values only
 - Backup passwords: encrypted locally using a passphrase-derived key
 - Vault PIN: hashed before SecureStore persistence
+
+
+## Email confirmation redirect
+
+Native signup requests the callback:
+
+`uidzone://auth/callback`
+
+The Android app registers the `uidzone` scheme, consumes the Supabase confirmation callback, retrieves the confirmed user and stores the resulting session in SecureStore. The login screen also includes **Resend confirmation** so an old email generated before v3.0.1 can be replaced with a fresh link.
+
+Supabase Auth URL Configuration must include:
+
+- **Site URL:** `https://uidzone.xyz`
+- **Additional Redirect URL:** `uidzone://auth/callback`
+
+If the Supabase project still uses `http://localhost:3000` as Site URL and the native callback is not allowlisted, Supabase can fall back to localhost after confirmation.

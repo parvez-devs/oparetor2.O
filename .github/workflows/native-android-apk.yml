@@ -100,25 +100,25 @@ jobs:
             echo "Release APK not found" >&2
             exit 1
           fi
-          cp "$APK" "dist/UID-2.O-v3.0.0.apk"
+          cp "$APK" "dist/UID-2.O-v3.0.1.apk"
 
-          if ! unzip -l "dist/UID-2.O-v3.0.0.apk" | grep -q 'assets/index.android.bundle'; then
+          if ! unzip -l "dist/UID-2.O-v3.0.1.apk" | grep -q 'assets/index.android.bundle'; then
             echo "Standalone JS bundle is missing from APK" >&2
             exit 1
           fi
 
           APKSIGNER="${ANDROID_HOME}/build-tools/36.0.0/apksigner"
           if [ -x "$APKSIGNER" ]; then
-            "$APKSIGNER" verify --verbose "dist/UID-2.O-v3.0.0.apk"
+            "$APKSIGNER" verify --verbose "dist/UID-2.O-v3.0.1.apk"
           fi
 
-          ls -lh "dist/UID-2.O-v3.0.0.apk"
+          ls -lh "dist/UID-2.O-v3.0.1.apk"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: UID-2.O-v3.0.0
-          path: mobile/dist/UID-2.O-v3.0.0.apk
+          name: UID-2.O-v3.0.1
+          path: mobile/dist/UID-2.O-v3.0.1.apk
           if-no-files-found: error
           retention-days: 30
 
@@ -128,16 +128,16 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          TAG="v3.0.0"
-          APK="dist/UID-2.O-v3.0.0.apk"
+          TAG="v3.0.1"
+          APK="dist/UID-2.O-v3.0.1.apk"
           NOTES="/tmp/uid2-v3-release-notes.md"
 
           cat > "$NOTES" <<'EOF'
-          # UID 2.O v3.0.0 — Cyber Minimal
+          # UID 2.O v3.0.1 — Email Confirmation Hotfix
 
-          Heavy native Android upgrade focused on professional visual identity, performance, security and advanced UID workflows.
+          Native Android hotfix for Supabase email confirmation redirects while preserving the Cyber Minimal v3 feature set.
 
-          ## Highlights
+          ## Hotfix\n\n          - Signup confirmation now requests the native callback `uidzone://auth/callback`\n          - App handles the confirmation deep link and stores the Supabase session in SecureStore\n          - Added Resend confirmation so users can generate a fresh fixed email link\n          - Existing data, Supabase sync and all v3 features are preserved\n\n          ## Highlights
 
           - AMOLED Cyber Minimal visual system with animated aurora depth and cyan edge lighting
           - Lottie launch reveal and native micro-interactions
@@ -158,11 +158,11 @@ jobs:
           - GitHub release update checker
           - API/Supabase diagnostics and safe diagnostic report copy
 
-          Install the attached `UID-2.O-v3.0.0.apk`.
+          Install the attached `UID-2.O-v3.0.1.apk`.
           EOF
 
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release upload "$TAG" "$APK" --repo "$GITHUB_REPOSITORY" --clobber
           else
-            gh release create "$TAG" "$APK"               --repo "$GITHUB_REPOSITORY"               --target "$GITHUB_SHA"               --title "UID 2.O v3.0.0 — Cyber Minimal"               --notes-file "$NOTES"
+            gh release create "$TAG" "$APK"               --repo "$GITHUB_REPOSITORY"               --target "$GITHUB_SHA"               --title "UID 2.O v3.0.1 — Cyber Minimal"               --notes-file "$NOTES"
           fi

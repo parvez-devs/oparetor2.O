@@ -1,6 +1,6 @@
 {
   "name": "uidzone-native",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "private": true,
   "main": "expo/AppEntry.js",
   "scripts": {
