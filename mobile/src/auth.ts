@@ -3,6 +3,7 @@ import { SUPABASE_KEY, SUPABASE_URL } from "./config";
 import type { Session } from "./types";
 
 const AUTH_KEY = "uidzone_auth_session";
+export const AUTH_REDIRECT_URL = "uidzone://auth/callback";
 
 type AuthBody = Partial<Session> & {
   session?: Session | null;
@@ -96,7 +97,8 @@ export async function signIn(email: string, password: string): Promise<Session> 
     method: "POST",
     headers: headers(),
     body: JSON.stringify({ email: email.trim().toLowerCase(), password })
-  });
+    }
+  );
   if (!res.ok) throw await parseError(res);
   const body = (await res.json()) as AuthBody;
   const session = normalize(body);
@@ -106,7 +108,9 @@ export async function signIn(email: string, password: string): Promise<Session> 
 }
 
 export async function signUp(email: string, password: string) {
-  const res = await fetch(SUPABASE_URL + "/auth/v1/signup", {
+  const res = await fetch(
+    SUPABASE_URL + "/auth/v1/signup?redirect_to=" + encodeURIComponent(AUTH_REDIRECT_URL),
+    {
     method: "POST",
     headers: headers(),
     body: JSON.stringify({ email: email.trim().toLowerCase(), password })
@@ -116,6 +120,57 @@ export async function signUp(email: string, password: string) {
   const session = normalize(body);
   if (session) await saveSession(session);
   return { session, user: body.user || session?.user || null };
+}
+
+
+export async function resendConfirmation(email: string) {
+  const res = await fetch(
+    SUPABASE_URL + "/auth/v1/resend?redirect_to=" + encodeURIComponent(AUTH_REDIRECT_URL),
+    {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify({ type: "signup", email: email.trim().toLowerCase() })
+    }
+  );
+  if (!res.ok) throw await parseError(res);
+}
+
+function parseAuthParams(url: string) {
+  const fragment = url.includes("#") ? url.slice(url.indexOf("#") + 1) : "";
+  const query = url.includes("?")
+    ? url.slice(url.indexOf("?") + 1, url.includes("#") ? url.indexOf("#") : undefined)
+    : "";
+  return new URLSearchParams(fragment || query);
+}
+
+export async function sessionFromAuthUrl(url: string): Promise<Session | null> {
+  if (!url.startsWith("uidzone://")) return null;
+
+  const params = parseAuthParams(url);
+  const error = params.get("error_description") || params.get("error");
+  if (error) throw new Error(decodeURIComponent(error.replace(/\+/g, " ")));
+
+  const accessToken = params.get("access_token");
+  const refreshToken = params.get("refresh_token");
+  if (!accessToken || !refreshToken) return null;
+
+  const userRes = await fetch(SUPABASE_URL + "/auth/v1/user", {
+    headers: headers({ Authorization: "Bearer " + accessToken })
+  });
+  if (!userRes.ok) throw await parseError(userRes);
+  const user = (await userRes.json()) as Session["user"];
+
+  const expiresIn = Number(params.get("expires_in") || "3600");
+  const session: Session = {
+    access_token: accessToken,
+    refresh_token: refreshToken,
+    expires_in: Number.isFinite(expiresIn) ? expiresIn : 3600,
+    expires_at: Math.floor(Date.now() / 1000) + (Number.isFinite(expiresIn) ? expiresIn : 3600),
+    token_type: params.get("token_type") || "bearer",
+    user
+  };
+  await saveSession(session);
+  return session;
 }
 
 export async function signOut(session: Session | null) {
